@@ -1,0 +1,43 @@
+[project]
+name = "prd-agent"
+version = "0.1.0"
+description = "CrewAI workflow that turns product requirements into reviewed PRDs and SDDs"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "alembic>=1.14,<2",
+    "crewai==1.14.6",
+    "fastapi>=0.115,<1",
+    "PyMySQL>=1.1,<2",
+    "pydantic>=2.11,<3",
+    "pydantic-settings>=2.7,<3",
+    "rich>=13.9,<15",
+    "sqlalchemy>=2.0,<3",
+    "typer>=0.15,<1",
+    "uvicorn>=0.34,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<9",
+    "pytest-cov>=6,<7",
+]
+
+[project.scripts]
+prd-agent = "prd_agent.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "flow"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/prd_agent"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["prd_agent"]

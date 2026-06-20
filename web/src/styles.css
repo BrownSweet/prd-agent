@@ -1,0 +1,175 @@
+:root {
+  color: #1d2a25;
+  background: #f3f1ea;
+  font-family:
+    Inter, "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 1180px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 75% 0%, rgba(180, 213, 190, 0.22), transparent 35%),
+    #f3f1ea;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  color: #eaf4ee;
+  background: #13251e;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 0 10px 28px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: #14251f;
+  font-weight: 800;
+  background: #d7f06f;
+  border-radius: 12px;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand small {
+  margin-top: 3px;
+  color: #93a79d;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.nav-menu {
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: #9fb2a8;
+  --el-menu-hover-bg-color: rgba(255, 255, 255, 0.06);
+  --el-menu-active-color: #eff9c8;
+  border-right: 0;
+}
+
+.nav-menu .el-menu-item {
+  margin-bottom: 8px;
+  border-radius: 10px;
+}
+
+.nav-menu .el-menu-item.is-active {
+  background: rgba(215, 240, 111, 0.12);
+}
+
+.local-badge {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: auto;
+  padding: 10px 12px;
+  color: #92a79d;
+  font-size: 12px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background: #b9dc6a;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(185, 220, 106, 0.12);
+}
+
+.main-area {
+  min-height: 100vh;
+  margin-left: 232px;
+  padding: 36px 42px 60px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 26px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.page-header p {
+  margin: 8px 0 0;
+  color: #748078;
+  font-size: 14px;
+}
+
+.surface {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #dedfd8;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(30, 54, 42, 0.05);
+}
+
+.section-title {
+  margin: 0 0 16px;
+  font-size: 16px;
+}
+
+.muted {
+  color: #7a857f;
+}
+
+.empty-state {
+  padding: 70px 20px;
+  text-align: center;
+}
+
+.error-state {
+  padding: 28px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.mono {
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.el-button--primary {
+  --el-button-bg-color: #1f503d;
+  --el-button-border-color: #1f503d;
+  --el-button-hover-bg-color: #28664e;
+  --el-button-hover-border-color: #28664e;
+}

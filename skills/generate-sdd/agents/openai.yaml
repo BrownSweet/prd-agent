@@ -1,0 +1,4 @@
+interface:
+  display_name: "SDD生成"
+  short_description: "把终审通过的PRD转换为按模块拆分且可直接开发的技术契约"
+  default_prompt: "Use $generate-sdd to convert this approved PRD into an implementation-ready SDD."

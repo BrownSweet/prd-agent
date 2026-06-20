@@ -1,0 +1,5 @@
+interface:
+  display_name: "需求逻辑校验"
+  short_description: "按七个维度扫描需求逻辑缺口并持续跟踪修复与豁免状态"
+  default_prompt: "Use $validate-requirement-logic to scan this structured requirement for logic gaps."
+

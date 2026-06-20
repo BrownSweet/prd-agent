@@ -1,0 +1,5 @@
+interface:
+  display_name: "PRD终审"
+  short_description: "独立审查PRD逻辑闭环场景覆盖交互一致性与用户使用路径"
+  default_prompt: "Use $review-prd to perform an independent final review of this PRD."
+

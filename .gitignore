@@ -1,0 +1,17 @@
+.env
+.venv/
+node_modules/
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+*.tsbuildinfo
+*.db
+output/
+web/vite.config.js
+web/vite.config.d.ts
+uv.lock
+.idea

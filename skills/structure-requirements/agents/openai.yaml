@@ -1,0 +1,5 @@
+interface:
+  display_name: "需求结构化"
+  short_description: "将模糊产品需求转为完整可追踪且可持续澄清的结构化规格"
+  default_prompt: "Use $structure-requirements to structure this product requirement and identify missing information."
+

@@ -1,0 +1,5 @@
+interface:
+  display_name: "PRD撰写"
+  short_description: "识别单一或复合产品类型并生成可终审可实施的完整PRD"
+  default_prompt: "Use $write-prd to identify the product type and write a complete PRD."
+
