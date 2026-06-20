@@ -1,6 +1,7 @@
 import type {
   ApiResponse,
   ArtifactSummary,
+  AuthStatus,
   DatabaseSetupResult,
   Job,
   LlmConfig,
@@ -27,6 +28,7 @@ async function request<T>(
 ): Promise<T> {
   const response = await fetch(`${API_ROOT}${path}`, {
     ...options,
+    credentials: 'same-origin',
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -34,6 +36,14 @@ async function request<T>(
   })
   const body = await response.json()
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      !path.startsWith('/auth/') &&
+      typeof window !== 'undefined'
+    ) {
+      const redirect = `${window.location.pathname}${window.location.search}`
+      window.location.assign(`/login?redirect=${encodeURIComponent(redirect)}`)
+    }
     throw new ApiError(body.message || '请求失败', response.status, body.details)
   }
   return (body as ApiResponse<T>).data
@@ -48,6 +58,24 @@ function writeOptions(method: string, body?: unknown): RequestInit {
 }
 
 export const api = {
+  getAuthStatus() {
+    return request<AuthStatus>('/auth/status')
+  },
+  setupAdmin(username: string, password: string) {
+    return request<AuthStatus>('/auth/setup', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    })
+  },
+  login(username: string, password: string) {
+    return request<AuthStatus>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    })
+  },
+  logout() {
+    return request<AuthStatus>('/auth/logout', { method: 'POST' })
+  },
   getSetupStatus() {
     return request<SetupStatus>('/setup/status')
   },

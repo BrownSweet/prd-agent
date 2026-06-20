@@ -6,6 +6,33 @@ afterEach(() => {
 })
 
 describe('API writes', () => {
+  it('sends admin setup, login, and logout requests without idempotency keys', async () => {
+    const fetchMock = vi.fn().mockImplementation(() =>
+      Promise.resolve(new Response(
+        JSON.stringify({
+          code: 'success',
+          data: { authenticated: true, adminConfigured: true, username: 'admin' },
+          message: 'ok',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      )),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+
+    await api.setupAdmin('admin', 'secure-password')
+    await api.login('admin', 'secure-password')
+    await api.logout()
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/auth/setup')
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      username: 'admin',
+      password: 'secure-password',
+    })
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/v1/auth/login')
+    expect(fetchMock.mock.calls[2][0]).toBe('/api/v1/auth/logout')
+    expect(fetchMock.mock.calls[0][1].headers['Idempotency-Key']).toBeUndefined()
+  })
+
   it('tests database setup without idempotency key', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(

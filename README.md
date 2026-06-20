@@ -77,6 +77,12 @@ uv run prd-agent worker
 构建后 FastAPI 会直接托管 `web/dist`，访问
 `http://127.0.0.1:8000`。排队任务由 MySQL 保存，刷新页面或重启 API 不会丢失；
 Worker 重启时会把遗留的 `running` 任务标记为失败，等待用户手动重试。
+
+数据库迁移完成后，首次打开管理台会进入登录页。系统没有默认账号：首次使用时
+在该页面创建本机管理员，创建成功后会自动登录。之后需要使用该用户名和密码
+进入工作台；登录会话有效期为 7 天。管理员密码使用 Argon2 哈希保存，浏览器
+Cookie 使用 `HttpOnly` 和 `SameSite=Strict`，数据库只保存会话令牌的哈希。
+
 如果数据库连接缺失或不可用，API 会进入 setup-only 模式，只开放安装向导接口；
 在 Web 中保存数据库配置后，停止当前 API，执行 `uv run prd-agent db-upgrade`，
 然后重新启动 `prd-agent api` 和 `prd-agent worker`。

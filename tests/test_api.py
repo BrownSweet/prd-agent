@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 from sqlalchemy.engine import make_url
 
 from prd_agent.api import (
@@ -198,6 +201,10 @@ def test_api_creates_project_with_idempotent_queued_job(
     headers = {"Idempotency-Key": "create-project-key-001"}
 
     with TestClient(app) as client:
+        client.post(
+            "/api/v1/auth/setup",
+            json={"username": "admin", "password": "secure-password"},
+        )
         response = client.post(
             "/api/v1/projects",
             headers=headers,
@@ -233,6 +240,10 @@ def test_api_masks_keys_and_preserves_key_on_blank_update(
     app = create_app(api_settings(test_database_url), repository)
 
     with TestClient(app) as client:
+        client.post(
+            "/api/v1/auth/setup",
+            json={"username": "admin", "password": "secure-password"},
+        )
         created = client.post(
             "/api/v1/llm-configs",
             headers={"Idempotency-Key": "create-config-key-001"},
@@ -271,3 +282,101 @@ def test_api_masks_keys_and_preserves_key_on_blank_update(
         raw = listed.text
         assert "sk-very-secret-value" not in raw
         assert '"apiKey"' not in raw
+
+
+def test_admin_setup_login_logout_and_api_protection(
+    repository: SQLAlchemyRepository,
+    test_database_url: str,
+) -> None:
+    app = create_app(api_settings(test_database_url), repository)
+
+    with TestClient(app) as client:
+        status = client.get("/api/v1/auth/status")
+        blocked = client.get("/api/v1/projects")
+
+        assert status.json()["data"] == {
+            "adminConfigured": False,
+            "authenticated": False,
+            "username": None,
+        }
+        assert blocked.status_code == 403
+        assert blocked.json()["code"] == "admin_setup_required"
+
+        created = client.post(
+            "/api/v1/auth/setup",
+            json={"username": " admin ", "password": "secure-password"},
+        )
+        assert created.status_code == 201
+        assert created.json()["data"]["username"] == "admin"
+        cookie = created.headers["set-cookie"]
+        assert "prd_agent_session=" in cookie
+        assert "HttpOnly" in cookie
+        assert "SameSite=strict" in cookie
+        assert "Max-Age=604800" in cookie
+
+        with repository.engine.connect() as connection:
+            password_hash = connection.scalar(
+                text("SELECT password_hash FROM admin_users WHERE id = 1")
+            )
+            token_hash = connection.scalar(
+                text("SELECT token_hash FROM admin_sessions LIMIT 1")
+            )
+        assert password_hash != "secure-password"
+        assert str(password_hash).startswith("$argon2")
+        assert len(str(token_hash)) == 64
+        assert client.cookies["prd_agent_session"] != token_hash
+
+        duplicate = client.post(
+            "/api/v1/auth/setup",
+            json={"username": "other", "password": "another-password"},
+        )
+        assert duplicate.status_code == 409
+
+        allowed = client.get("/api/v1/projects")
+        assert allowed.status_code == 200
+
+        logged_out = client.post("/api/v1/auth/logout")
+        assert logged_out.status_code == 200
+        assert logged_out.json()["data"]["authenticated"] is False
+        assert client.get("/api/v1/projects").status_code == 401
+
+        wrong = client.post(
+            "/api/v1/auth/login",
+            json={"username": "admin", "password": "wrong-password"},
+        )
+        assert wrong.status_code == 401
+        assert wrong.json()["message"] == "用户名或密码错误"
+
+        logged_in = client.post(
+            "/api/v1/auth/login",
+            json={"username": "admin", "password": "secure-password"},
+        )
+        assert logged_in.status_code == 200
+        assert logged_in.json()["data"]["authenticated"] is True
+        assert client.get("/api/v1/projects").status_code == 200
+
+
+def test_expired_admin_session_is_rejected(
+    repository: SQLAlchemyRepository,
+    test_database_url: str,
+) -> None:
+    app = create_app(api_settings(test_database_url), repository)
+
+    with TestClient(app) as client:
+        client.post(
+            "/api/v1/auth/setup",
+            json={"username": "admin", "password": "secure-password"},
+        )
+        with repository.engine.begin() as connection:
+            connection.execute(
+                text("UPDATE admin_sessions SET expires_at = :expires_at"),
+                {
+                    "expires_at": datetime.now(timezone.utc)
+                    - timedelta(seconds=1)
+                },
+            )
+
+        response = client.get("/api/v1/projects")
+
+        assert response.status_code == 401
+        assert response.json()["code"] == "authentication_required"

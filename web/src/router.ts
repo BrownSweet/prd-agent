@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ArtifactView from './views/ArtifactView.vue'
 import LlmSettingsView from './views/LlmSettingsView.vue'
+import LoginView from './views/LoginView.vue'
 import NewProjectView from './views/NewProjectView.vue'
 import ProjectListView from './views/ProjectListView.vue'
 import ProjectWorkspaceView from './views/ProjectWorkspaceView.vue'
@@ -11,6 +12,7 @@ export const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', redirect: '/projects' },
+    { path: '/login', component: LoginView },
     { path: '/projects', component: ProjectListView },
     { path: '/projects/new', component: NewProjectView },
     {
@@ -29,16 +31,26 @@ export const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (to.path.startsWith('/setup')) {
-    return true
-  }
   try {
-    const status = await api.getSetupStatus()
-    if (status.setupRequired) {
-      return '/setup/database'
+    const setup = await api.getSetupStatus()
+    if (setup.setupRequired) {
+      return to.path === '/setup/database' ? true : '/setup/database'
     }
+
+    const auth = await api.getAuthStatus()
+    if (!auth.authenticated) {
+      if (to.path === '/login') return true
+      return {
+        path: '/login',
+        query: { redirect: to.fullPath },
+      }
+    }
+
+    if (to.path === '/login') return '/projects'
   } catch {
-    return true
+    return to.path === '/login' || to.path === '/setup/database'
+      ? true
+      : '/login'
   }
   return true
 })

@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from datetime import timedelta
+from hashlib import sha256
 from pathlib import Path
+from secrets import token_urlsafe
 from typing import Annotated, Any
 
-from fastapi import FastAPI, Header, Query, Request
+from fastapi import FastAPI, Header, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pwdlib import PasswordHash
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
+from starlette.concurrency import run_in_threadpool
 
 from prd_agent.flow import rollback_targets_for
 from prd_agent.gates import (
@@ -29,9 +34,11 @@ from prd_agent.models import (
     Severity,
     Stage,
     StageStatus,
+    utc_now,
 )
 from prd_agent.repositories import (
     ActiveJobError,
+    AdminAlreadyConfiguredError,
     ArtifactNotFoundError,
     LlmConfigNotFoundError,
     LlmConfigRecord,
@@ -44,6 +51,10 @@ from prd_agent.services import (
     workflow_for_config,
 )
 from prd_agent.settings import Settings, get_settings, validate_database_pair
+
+SESSION_COOKIE = "prd_agent_session"
+SESSION_MAX_AGE = 7 * 24 * 60 * 60
+PASSWORD_HASH = PasswordHash.recommended()
 
 
 class ApiModel(BaseModel):
@@ -111,6 +122,16 @@ class DatabaseSetupRequest(ApiModel):
     test_database_url: str = Field(min_length=1, alias="testDatabaseUrl")
 
 
+class AuthCredentials(ApiModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("username", mode="before")
+    @classmethod
+    def strip_username(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+
 IdempotencyKey = Annotated[
     str,
     Header(alias="Idempotency-Key", min_length=8, max_length=120),
@@ -165,6 +186,8 @@ def create_app(
     _register_exception_handlers(app)
     _register_setup_routes(app, configured, repo is not None, setup_error)
     if repo is not None:
+        _register_auth_routes(app, repo)
+        _register_auth_middleware(app, repo)
         _register_routes(app, repo, configured)
     else:
         _register_setup_required_routes(app)
@@ -284,6 +307,162 @@ def _register_setup_routes(
                 "testDatabaseUrl": _mask_database_url(test_database_url),
             }
         )
+
+
+def _register_auth_routes(
+    app: FastAPI,
+    repo: SQLAlchemyRepository,
+) -> None:
+    prefix = "/api/v1/auth"
+
+    @app.get(f"{prefix}/status")
+    def auth_status(request: Request) -> dict[str, Any]:
+        token = request.cookies.get(SESSION_COOKIE)
+        admin = repo.get_admin_for_session(_token_hash(token)) if token else None
+        configured_admin = admin or repo.get_admin_user()
+        return _ok(
+            {
+                "adminConfigured": configured_admin is not None,
+                "authenticated": admin is not None,
+                "username": admin.username if admin else None,
+            }
+        )
+
+    @app.post(f"{prefix}/setup", status_code=201)
+    def setup_admin(
+        body: AuthCredentials,
+        response: Response,
+    ) -> Any:
+        if repo.get_admin_user():
+            return _error("admin_already_configured", "管理员已创建", 409)
+        try:
+            admin = repo.create_admin_user(
+                body.username,
+                PASSWORD_HASH.hash(body.password),
+            )
+        except AdminAlreadyConfiguredError:
+            return _error("admin_already_configured", "管理员已创建", 409)
+        token = _create_session(repo)
+        _set_session_cookie(response, token)
+        return _ok(
+            {
+                "adminConfigured": True,
+                "authenticated": True,
+                "username": admin.username,
+            }
+        )
+
+    @app.post(f"{prefix}/login")
+    def login(
+        body: AuthCredentials,
+        response: Response,
+    ) -> Any:
+        admin = repo.get_admin_by_username(body.username)
+        if not admin or not PASSWORD_HASH.verify(
+            body.password,
+            admin.password_hash,
+        ):
+            return _error("invalid_credentials", "用户名或密码错误", 401)
+        token = _create_session(repo)
+        _set_session_cookie(response, token)
+        return _ok(
+            {
+                "adminConfigured": True,
+                "authenticated": True,
+                "username": admin.username,
+            }
+        )
+
+    @app.post(f"{prefix}/logout")
+    def logout(request: Request, response: Response) -> dict[str, Any]:
+        token = request.cookies.get(SESSION_COOKIE)
+        if token:
+            repo.delete_admin_session(_token_hash(token))
+        response.delete_cookie(
+            SESSION_COOKIE,
+            path="/",
+            httponly=True,
+            samesite="strict",
+        )
+        return _ok(
+            {
+                "adminConfigured": repo.get_admin_user() is not None,
+                "authenticated": False,
+                "username": None,
+            }
+        )
+
+
+def _register_auth_middleware(
+    app: FastAPI,
+    repo: SQLAlchemyRepository,
+) -> None:
+    public_paths = {
+        "/api/v1/health",
+        "/api/v1/setup/status",
+        "/api/v1/auth/status",
+        "/api/v1/auth/setup",
+        "/api/v1/auth/login",
+        "/api/v1/auth/logout",
+    }
+
+    @app.middleware("http")
+    async def require_authentication(request: Request, call_next):
+        path = request.url.path
+        if (
+            request.method == "OPTIONS"
+            or not path.startswith("/api/v1/")
+            or path in public_paths
+        ):
+            return await call_next(request)
+
+        token = request.cookies.get(SESSION_COOKIE)
+        if token:
+            admin = await run_in_threadpool(
+                repo.get_admin_for_session,
+                _token_hash(token),
+            )
+            if admin:
+                request.state.admin = admin
+                return await call_next(request)
+
+        admin = await run_in_threadpool(repo.get_admin_user)
+        if not admin:
+            return _error(
+                "admin_setup_required",
+                "请先创建管理员账号",
+                403,
+            )
+        return _error(
+            "authentication_required",
+            "请先登录",
+            401,
+        )
+
+
+def _create_session(repo: SQLAlchemyRepository) -> str:
+    token = token_urlsafe(32)
+    repo.create_admin_session(
+        _token_hash(token),
+        utc_now() + timedelta(seconds=SESSION_MAX_AGE),
+    )
+    return token
+
+
+def _token_hash(token: str) -> str:
+    return sha256(token.encode("utf-8")).hexdigest()
+
+
+def _set_session_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        SESSION_COOKIE,
+        token,
+        max_age=SESSION_MAX_AGE,
+        httponly=True,
+        samesite="strict",
+        secure=False,
+        path="/",
+    )
 
 
 def _register_setup_required_routes(app: FastAPI) -> None:

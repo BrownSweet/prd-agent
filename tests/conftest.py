@@ -41,6 +41,8 @@ from prd_agent.repositories import SQLAlchemyRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TABLES = (
+    "admin_sessions",
+    "admin_users",
     "app_settings",
     "workflow_events",
     "approvals",

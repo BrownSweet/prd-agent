@@ -313,6 +313,32 @@ class AppSettingRecord(Base):
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
 
 
+class AdminUserRecord(Base):
+    __tablename__ = "admin_users"
+    __table_args__ = MYSQL_TABLE_OPTIONS
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+
+
+class AdminSessionRecord(Base):
+    __tablename__ = "admin_sessions"
+    __table_args__ = MYSQL_TABLE_OPTIONS
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    admin_user_id: Mapped[int] = mapped_column(
+        ForeignKey("admin_users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        UTCDateTime(), nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+
+
 class ProjectNotFoundError(LookupError):
     pass
 
@@ -326,6 +352,10 @@ class LlmConfigNotFoundError(LookupError):
 
 
 class ActiveJobError(RuntimeError):
+    pass
+
+
+class AdminAlreadyConfiguredError(RuntimeError):
     pass
 
 
@@ -366,6 +396,98 @@ class SQLAlchemyRepository:
                 },
             )
         )
+
+    def get_admin_user(self) -> AdminUserRecord | None:
+        with self.sessions() as session:
+            record = session.get(AdminUserRecord, 1)
+            if record:
+                session.expunge(record)
+            return record
+
+    def get_admin_by_username(self, username: str) -> AdminUserRecord | None:
+        with self.sessions() as session:
+            record = session.scalar(
+                select(AdminUserRecord).where(AdminUserRecord.username == username)
+            )
+            if record:
+                session.expunge(record)
+            return record
+
+    def create_admin_user(
+        self,
+        username: str,
+        password_hash: str,
+    ) -> AdminUserRecord:
+        now = utc_now()
+        record = AdminUserRecord(
+            id=1,
+            username=username,
+            password_hash=password_hash,
+            created_at=now,
+            updated_at=now,
+        )
+        with self.sessions.begin() as session:
+            if session.get(AdminUserRecord, 1):
+                raise AdminAlreadyConfiguredError("管理员已创建")
+            session.add(record)
+        return record
+
+    def create_admin_session(
+        self,
+        token_hash: str,
+        expires_at: datetime,
+    ) -> None:
+        now = utc_now()
+        with self.sessions.begin() as session:
+            session.execute(
+                delete(AdminSessionRecord).where(
+                    AdminSessionRecord.expires_at <= now
+                )
+            )
+            session.add(
+                AdminSessionRecord(
+                    token_hash=token_hash,
+                    admin_user_id=1,
+                    expires_at=expires_at,
+                    created_at=now,
+                )
+            )
+
+    def get_admin_for_session(
+        self,
+        token_hash: str,
+        now: datetime | None = None,
+    ) -> AdminUserRecord | None:
+        checked_at = now or utc_now()
+        with self.sessions.begin() as session:
+            record = session.scalar(
+                select(AdminUserRecord)
+                .join(
+                    AdminSessionRecord,
+                    AdminSessionRecord.admin_user_id == AdminUserRecord.id,
+                )
+                .where(
+                    AdminSessionRecord.token_hash == token_hash,
+                    AdminSessionRecord.expires_at > checked_at,
+                )
+            )
+            if record:
+                session.expunge(record)
+                return record
+            session.execute(
+                delete(AdminSessionRecord).where(
+                    AdminSessionRecord.token_hash == token_hash
+                )
+            )
+            return None
+
+    def delete_admin_session(self, token_hash: str) -> None:
+        with self.sessions.begin() as session:
+            session.execute(
+                delete(AdminSessionRecord).where(
+                    AdminSessionRecord.token_hash == token_hash
+                )
+            )
 
     def create_project(
         self,

@@ -152,3 +152,9 @@ export interface DatabaseSetupResult {
   databaseUrl: string | null
   testDatabaseUrl: string | null
 }
+
+export interface AuthStatus {
+  adminConfigured: boolean
+  authenticated: boolean
+  username: string | null
+}
