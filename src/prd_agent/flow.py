@@ -81,12 +81,14 @@ class WorkflowEngine:
         self,
         requirement: str,
         llm_config_id: str | None = None,
+        allow_empty_requirement: bool = False,
     ) -> ProjectState:
         requirement = requirement.strip()
-        if not requirement:
+        if not requirement and not allow_empty_requirement:
             raise ValueError("需求描述不能为空")
         state = ProjectState()
-        state.requirement_spec.source_inputs.append(SourceInput(text=requirement))
+        if requirement:
+            state.requirement_spec.source_inputs.append(SourceInput(text=requirement))
         self.repository.create_project(state, llm_config_id=llm_config_id)
         self._persist_event(state, "project_created", "项目已创建")
         return state

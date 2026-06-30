@@ -50,6 +50,7 @@ TABLES = (
     "logic_issues",
     "questions",
     "requirement_snapshots",
+    "project_attachments",
     "workflow_jobs",
     "projects",
     "llm_configs",

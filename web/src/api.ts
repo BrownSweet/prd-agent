@@ -26,11 +26,12 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const isFormData = options.body instanceof FormData
   const response = await fetch(`${API_ROOT}${path}`, {
     ...options,
     credentials: 'same-origin',
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...options.headers,
     },
   })
@@ -118,7 +119,21 @@ export const api = {
   getProject(projectId: string) {
     return request<ProjectDetail>(`/projects/${projectId}`)
   },
-  createProject(requirement: string, llmConfigId?: string) {
+  createProject(requirement: string, llmConfigId?: string, files: File[] = []) {
+    if (files.length) {
+      const body = new FormData()
+      body.append('requirement', requirement)
+      if (llmConfigId) body.append('llmConfigId', llmConfigId)
+      files.forEach((file) => body.append('files', file))
+      return request<{ projectId: string; jobId: string }>(
+        '/projects',
+        {
+          method: 'POST',
+          headers: { 'Idempotency-Key': crypto.randomUUID() },
+          body,
+        },
+      )
+    }
     return request<{ projectId: string; jobId: string }>(
       '/projects',
       writeOptions('POST', { requirement, llmConfigId }),
@@ -202,6 +217,9 @@ export const api = {
   },
   artifactDownloadUrl(projectId: string, type: string, version: number) {
     return `${API_ROOT}/projects/${projectId}/artifacts/${type}/${version}/download`
+  },
+  attachmentDownloadUrl(projectId: string, attachmentId: string) {
+    return `${API_ROOT}/projects/${projectId}/attachments/${attachmentId}/download`
   },
   listLlmConfigs(includeArchived = false) {
     return request<{ items: LlmConfig[] }>(

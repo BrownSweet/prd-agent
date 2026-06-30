@@ -122,6 +122,29 @@ class ProjectRecord(Base):
     )
 
 
+class ProjectAttachmentRecord(Base):
+    __tablename__ = "project_attachments"
+    __table_args__ = MYSQL_TABLE_OPTIONS
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    stored_path: Mapped[str] = mapped_column(String(600), nullable=False)
+    content_type: Mapped[str | None] = mapped_column(String(255))
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    kind: Mapped[str] = mapped_column(String(40), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(
+        String(30), nullable=False, default="pending", index=True
+    )
+    extracted_text: Mapped[str | None] = mapped_column(LONGTEXT)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+
+
 class RequirementSnapshotRecord(Base):
     __tablename__ = "requirement_snapshots"
     __table_args__ = (
@@ -509,12 +532,98 @@ class SQLAlchemyRepository:
                 )
             )
 
+    def create_project_attachments(
+        self,
+        project_id: str,
+        attachments: list[dict[str, Any]],
+    ) -> list[ProjectAttachmentRecord]:
+        if not attachments:
+            return []
+        now = utc_now()
+        with self.sessions.begin() as session:
+            self._lock_project(session, project_id)
+            records = [
+                ProjectAttachmentRecord(
+                    id=str(item["id"]),
+                    project_id=project_id,
+                    original_filename=str(item["original_filename"]),
+                    stored_path=str(item["stored_path"]),
+                    content_type=(
+                        str(item["content_type"])
+                        if item.get("content_type")
+                        else None
+                    ),
+                    size_bytes=int(item["size_bytes"]),
+                    sha256=str(item["sha256"]),
+                    kind=str(item["kind"]),
+                    status="pending",
+                    extracted_text=None,
+                    error_message=None,
+                    created_at=now,
+                    updated_at=now,
+                )
+                for item in attachments
+            ]
+            session.add_all(records)
+        return self.list_project_attachments(project_id)
+
     def get_project(self, project_id: str) -> ProjectState:
         with self.sessions() as session:
             record = session.get(ProjectRecord, project_id)
             if not record:
                 raise ProjectNotFoundError(f"项目不存在：{project_id}")
             return ProjectState.model_validate(record.state_json)
+
+    def get_project_attachment(
+        self,
+        project_id: str,
+        attachment_id: str,
+    ) -> ProjectAttachmentRecord:
+        with self.sessions() as session:
+            record = session.get(ProjectAttachmentRecord, attachment_id)
+            if not record or record.project_id != project_id:
+                raise LookupError(f"附件不存在：{attachment_id}")
+            session.expunge(record)
+            return record
+
+    def list_project_attachments(
+        self,
+        project_id: str,
+    ) -> list[ProjectAttachmentRecord]:
+        with self.sessions() as session:
+            records = list(
+                session.scalars(
+                    select(ProjectAttachmentRecord)
+                    .where(ProjectAttachmentRecord.project_id == project_id)
+                    .order_by(ProjectAttachmentRecord.created_at)
+                )
+            )
+            for record in records:
+                session.expunge(record)
+            return records
+
+    def update_project_attachment(
+        self,
+        attachment_id: str,
+        *,
+        status: str,
+        extracted_text: str | None = None,
+        error_message: str | None = None,
+    ) -> ProjectAttachmentRecord:
+        with self.sessions.begin() as session:
+            record = session.get(
+                ProjectAttachmentRecord,
+                attachment_id,
+                with_for_update=True,
+            )
+            if not record:
+                raise LookupError(f"附件不存在：{attachment_id}")
+            record.status = status
+            record.extracted_text = extracted_text
+            record.error_message = error_message[:4000] if error_message else None
+            record.updated_at = utc_now()
+            project_id = record.project_id
+        return self.get_project_attachment(project_id, attachment_id)
 
     def get_project_record(self, project_id: str) -> ProjectRecord:
         with self.sessions() as session:

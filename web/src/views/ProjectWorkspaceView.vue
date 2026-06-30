@@ -190,6 +190,23 @@ function openOverrideDialog() {
   overrideReason.value = ''
   overrideVisible.value = true
 }
+
+function attachmentStatusType(status: string): 'success' | 'warning' | 'danger' {
+  if (status === 'processed') return 'success'
+  if (status === 'failed') return 'danger'
+  return 'warning'
+}
+
+function attachmentStatusLabel(status: string) {
+  if (status === 'processed') return '已分析'
+  if (status === 'failed') return '失败'
+  return '等待处理'
+}
+
+function formatAttachmentSize(bytes: number) {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))}KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)}MB`
+}
 </script>
 
 <template>
@@ -502,7 +519,43 @@ function openOverrideDialog() {
         />
       </main>
 
-      <RequirementPanel :spec="project.data.value.requirementSpec" />
+      <aside class="side-column">
+        <RequirementPanel :spec="project.data.value.requirementSpec" />
+        <section
+          v-if="project.data.value.attachments.length"
+          class="surface attachment-panel"
+        >
+          <h2 class="section-title">需求附件</h2>
+          <ul class="attachment-list">
+            <li
+              v-for="attachment in project.data.value.attachments"
+              :key="attachment.attachmentId"
+            >
+              <div>
+                <a
+                  :href="api.attachmentDownloadUrl(projectId, attachment.attachmentId)"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {{ attachment.filename }}
+                </a>
+                <small>
+                  {{ attachment.kind }} · {{ formatAttachmentSize(attachment.sizeBytes) }}
+                </small>
+              </div>
+              <el-tag
+                size="small"
+                :type="attachmentStatusType(attachment.status)"
+              >
+                {{ attachmentStatusLabel(attachment.status) }}
+              </el-tag>
+              <p v-if="attachment.errorMessage">
+                {{ attachment.errorMessage }}
+              </p>
+            </li>
+          </ul>
+        </section>
+      </aside>
     </div>
 
     <el-dialog v-model="waiverVisible" title="豁免逻辑问题" width="520px">
@@ -630,6 +683,60 @@ function openOverrideDialog() {
 .work-column {
   display: grid;
   gap: 16px;
+}
+
+.side-column {
+  display: grid;
+  gap: 16px;
+}
+
+.attachment-panel {
+  padding: 22px;
+}
+
+.attachment-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.attachment-list li {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e8e1;
+}
+
+.attachment-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.attachment-list a,
+.attachment-list small {
+  display: block;
+}
+
+.attachment-list a {
+  overflow: hidden;
+  color: #214f3d;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-list small,
+.attachment-list p {
+  color: #7b857f;
+  font-size: 12px;
+}
+
+.attachment-list p {
+  margin: 0;
+  line-height: 1.5;
 }
 
 .failed-actions {

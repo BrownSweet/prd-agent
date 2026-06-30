@@ -1,0 +1,247 @@
+{"kind":"deck","id":"pr/3uedvc","name":"Deck"}
+{"kind":"layout","layoutId":"7cfe7e55-a96f-4857-8a89-10bcac6e1dd8","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"57592e3c-752f-416d-9dd4-30cd5b9966b7","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/m3qhmt","slide":1,"title":"PRD Agent","textShapes":12}
+{"kind":"textbox","id":"sh/yd0z6103","slide":1,"name":"cover-eyebrow","text":"PRD Agent","textPreview":"PRD Agent","textChars":9,"textLines":1,"bbox":[42,42,320,36]}
+{"kind":"textbox","id":"sh/90je9cvi","slide":1,"name":"cover-title","text":"从模糊需求到可执行 SDD","textPreview":"从模糊需求到可执行 SDD","textChars":13,"textLines":1,"bbox":[42,158,860,170]}
+{"kind":"textbox","id":"sh/gfmlkjm1","slide":1,"name":"cover-subtitle","text":"一个由 CrewAI Flow 编排、Python 门禁控制、Web 与 CLI 共存的需求工作台。","textPreview":"一个由 CrewAI Flow 编排、Python 门禁控制、Web 与 CLI 共存的需求工作台。","textChars":50,"textLines":1,"bbox":[42,356,760,72]}
+{"kind":"shape","id":"sh/rmhk3q5o","slide":1,"name":"cover-right-panel","bbox":[925,36,313,594]}
+{"kind":"shape","id":"sh/y1kre1w7","slide":1,"name":"cover-step-0","bbox":[962,92,238,42]}
+{"kind":"textbox","id":"sh/9s36hcrm","slide":1,"name":"cover-step-label-0","text":"STRUCTURING","textPreview":"STRUCTURING","textChars":11,"textLines":1,"bbox":[980,101,200,24]}
+{"kind":"shape","id":"sh/g7adsji5","slide":1,"name":"cover-step-1","bbox":[962,172,238,42]}
+{"kind":"textbox","id":"sh/nih4byhg","slide":1,"name":"cover-step-label-1","text":"LOGIC GATE","textPreview":"LOGIC GATE","textChars":10,"textLines":1,"bbox":[980,181,200,24]}
+{"kind":"shape","id":"sh/yxobm58z","slide":1,"name":"cover-step-2","bbox":[962,252,238,42]}
+{"kind":"textbox","id":"sh/obm58z25","slide":1,"name":"cover-step-label-2","text":"PRD REVIEW","textPreview":"PRD REVIEW","textChars":10,"textLines":1,"bbox":[980,261,200,24]}
+{"kind":"shape","id":"sh/hwfyxobm","slide":1,"name":"cover-step-3","bbox":[962,332,238,42]}
+{"kind":"textbox","id":"sh/65wjudg7","slide":1,"name":"cover-step-label-3","text":"SDD OUTPUT","textPreview":"SDD OUTPUT","textChars":10,"textLines":1,"bbox":[980,341,200,24]}
+{"kind":"shape","id":"sh/zqtcj6to","slide":1,"name":"cover-step-4","bbox":[962,412,238,42]}
+{"kind":"textbox","id":"sh/oza1gvy9","slide":1,"name":"cover-step-label-4","text":"COMPLETED","textPreview":"COMPLETED","textChars":9,"textLines":1,"bbox":[980,421,200,24]}
+{"kind":"shape","id":"sh/hk3q5o7q","slide":1,"name":"cover-chip-1","bbox":[42,520,380,78]}
+{"kind":"textbox","id":"sh/6xkf6dcb","slide":1,"name":"cover-chip-1-text","text":"LLM 输出不能直接改变阶段","textPreview":"LLM 输出不能直接改变阶段","textChars":14,"textLines":1,"bbox":[64,542,336,32]}
+{"kind":"shape","id":"sh/zed8v6ps","slide":1,"name":"cover-chip-2","bbox":[450,520,370,78]}
+{"kind":"textbox","id":"sh/orytsvu9","slide":1,"name":"cover-chip-2-text","text":"PRD / Review / SDD 可追溯","textPreview":"PRD / Review / SDD 可追溯","textChars":22,"textLines":1,"bbox":[472,542,326,32]}
+{"kind":"textbox","id":"sh/hcrmhk3q","slide":1,"name":"footer-section-1","text":"Project overview","textPreview":"Project overview","textChars":16,"textLines":1,"bbox":[42,660,480,24]}
+{"kind":"textbox","id":"sh/5gbq1ory","slide":1,"name":"footer-page-1","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[1184,660,54,24]}
+{"kind":"notes","id":"nt/m3qhmt","slide":1,"text":""}
+{"kind":"slide","id":"sl/3hp90d","slide":2,"title":"问题不是“写 PRD 慢”","textShapes":12}
+{"kind":"textbox","id":"sh/6tovahoz","slide":2,"name":"title-2","text":"问题不是“写 PRD 慢”","textPreview":"问题不是“写 PRD 慢”","textChars":13,"textLines":1,"bbox":[42,36,820,62]}
+{"kind":"textbox","id":"sh/dg7adsji","slide":2,"name":"subtitle-2","text":"真正的风险在于需求状态、审查责任和技术契约无法被稳定追踪。","textPreview":"真正的风险在于需求状态、审查责任和技术契约无法被稳定追踪。","textChars":29,"textLines":1,"bbox":[42,112,900,54]}
+{"kind":"shape","id":"sh/ovahoza1","slide":2,"name":"title-rule-2","bbox":[42,176,1196,1]}
+{"kind":"textbox","id":"sh/z25kb6xk","slide":2,"name":"footer-section-2","text":"Why it exists","textPreview":"Why it exists","textChars":13,"textLines":1,"bbox":[42,660,480,24]}
+{"kind":"textbox","id":"sh/6hcrmhk3","slide":2,"name":"footer-page-2","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1184,660,54,24]}
+{"kind":"shape","id":"sh/d8v6psfi","slide":2,"name":"problem-panel-0","bbox":[42,232,574,146]}
+{"kind":"shape","id":"sh/onyd0z61","slide":2,"name":"problem-marker-0","bbox":[62,260,14,14]}
+{"kind":"textbox","id":"sh/vy90je9c","slide":2,"name":"problem-title-0","text":"输入不完整","textPreview":"输入不完整","textChars":5,"textLines":1,"bbox":[96,254,230,32]}
+{"kind":"textbox","id":"sh/6dcbulwv","slide":2,"name":"problem-body-0","text":"模糊需求直接生成文档，容易把假设写成事实。","textPreview":"模糊需求直接生成文档，容易把假设写成事实。","textChars":21,"textLines":1,"bbox":[96,304,474,48]}
+{"kind":"shape","id":"sh/4zidonyd","slide":2,"name":"problem-panel-1","bbox":[664,232,574,146]}
+{"kind":"shape","id":"sh/xkf6dcbu","slide":2,"name":"problem-marker-1","bbox":[684,260,14,14]}
+{"kind":"textbox","id":"sh/mtwra5gb","slide":2,"name":"problem-title-1","text":"流程不可控","textPreview":"流程不可控","textChars":5,"textLines":1,"bbox":[718,254,230,32]}
+{"kind":"textbox","id":"sh/fepkzupw","slide":2,"name":"problem-body-1","text":"模型输出如果直接推进阶段，缺少可审计的确认点。","textPreview":"模型输出如果直接推进阶段，缺少可审计的确认点。","textChars":23,"textLines":1,"bbox":[718,304,474,48]}
+{"kind":"shape","id":"sh/4r65wjud","slide":2,"name":"problem-panel-2","bbox":[42,444,574,146]}
+{"kind":"shape","id":"sh/xc3ylc7u","slide":2,"name":"problem-marker-2","bbox":[62,472,14,14]}
+{"kind":"textbox","id":"sh/mlkjm1cf","slide":2,"name":"problem-title-2","text":"审查不独立","textPreview":"审查不独立","textChars":5,"textLines":1,"bbox":[96,466,230,32]}
+{"kind":"textbox","id":"sh/f6dcbulw","slide":2,"name":"problem-body-2","text":"同一个作者自我修订，逻辑矛盾和场景遗漏容易被掩盖。","textPreview":"同一个作者自我修订，逻辑矛盾和场景遗漏容易被掩盖。","textChars":25,"textLines":1,"bbox":[96,516,474,48]}
+{"kind":"shape","id":"sh/4fu18jqh","slide":2,"name":"problem-panel-3","bbox":[664,444,574,146]}
+{"kind":"shape","id":"sh/x0nuxc3y","slide":2,"name":"problem-marker-3","bbox":[684,472,14,14]}
+{"kind":"textbox","id":"sh/h4byhgn2","slide":2,"name":"problem-title-3","text":"交付不可执行","textPreview":"交付不可执行","textChars":6,"textLines":1,"bbox":[718,466,230,32]}
+{"kind":"textbox","id":"sh/sji5snel","slide":2,"name":"problem-body-3","text":"PRD 与 SDD 分离，开发拿到的不是稳定技术契约。","textPreview":"PRD 与 SDD 分离，开发拿到的不是稳定技术契约。","textChars":27,"textLines":1,"bbox":[718,516,474,48]}
+{"kind":"notes","id":"nt/3hp90d","slide":2,"text":""}
+{"kind":"slide","id":"sl/6p1c8j","slide":3,"title":"9 个阶段，把生成过程变成状态机","textShapes":32}
+{"kind":"textbox","id":"sh/q1orytsv","slide":3,"name":"title-3","text":"9 个阶段，把生成过程变成状态机","textPreview":"9 个阶段，把生成过程变成状态机","textChars":16,"textLines":1,"bbox":[42,36,820,62]}
+{"kind":"textbox","id":"sh/xs72x4na","slide":3,"name":"subtitle-3","text":"每一步都有明确状态；关键节点等待人工确认或处理反馈。","textPreview":"每一步都有明确状态；关键节点等待人工确认或处理反馈。","textChars":26,"textLines":1,"bbox":[42,112,900,54]}
+{"kind":"shape","id":"sh/87ed8bat","slide":3,"name":"title-rule-3","bbox":[42,176,1196,1]}
+{"kind":"textbox","id":"sh/je9cvixc","slide":3,"name":"footer-section-3","text":"Workflow","textPreview":"Workflow","textChars":8,"textLines":1,"bbox":[42,660,480,24]}
+{"kind":"textbox","id":"sh/qtcj6tov","slide":3,"name":"footer-page-3","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1184,660,54,24]}
+{"kind":"shape","id":"sh/1gvy90je","slide":3,"name":"workflow-card-1","bbox":[42,224,360,94]}
+{"kind":"textbox","id":"sh/8z25kb6x","slide":3,"name":"workflow-num-1","text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[60,241,40,40]}
+{"kind":"textbox","id":"sh/fa9w3m94","slide":3,"name":"workflow-label-1","text":"结构化","textPreview":"结构化","textChars":3,"textLines":1,"bbox":[114,242,220,30]}
+{"kind":"textbox","id":"sh/qpg3ex0n","slide":3,"name":"workflow-code-1","text":"STRUCTURING","textPreview":"STRUCTURING","textChars":11,"textLines":1,"bbox":[114,280,260,24]}
+{"kind":"shape","id":"sh/wjudg7ad","slide":3,"name":"workflow-card-2","bbox":[452,224,360,94]}
+{"kind":"textbox","id":"sh/p4r65wju","slide":3,"name":"workflow-num-2","text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[470,241,40,40]}
+{"kind":"textbox","id":"sh/ed8v6psf","slide":3,"name":"workflow-label-2","text":"逻辑验证","textPreview":"逻辑验证","textChars":4,"textLines":1,"bbox":[524,242,220,30]}
+{"kind":"textbox","id":"sh/7y1kre1w","slide":3,"name":"workflow-code-2","text":"LOGIC_VALIDATING","textPreview":"LOGIC_VALIDATING","textChars":16,"textLines":1,"bbox":[524,280,260,24]}
+{"kind":"shape","id":"sh/0bi9s36h","slide":3,"name":"workflow-card-3","bbox":[862,224,360,94]}
+{"kind":"textbox","id":"sh/pwb2hwfy","slide":3,"name":"workflow-num-3","text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[880,241,40,40]}
+{"kind":"textbox","id":"sh/i5sneloj","slide":3,"name":"workflow-label-3","text":"类型确认","textPreview":"类型确认","textChars":4,"textLines":1,"bbox":[934,242,220,30]}
+{"kind":"textbox","id":"sh/7qpg3ex0","slide":3,"name":"workflow-code-3","text":"PRD_TYPE_CONFIRMING","textPreview":"PRD_TYPE_CONFIRMING","textChars":19,"textLines":1,"bbox":[934,280,260,24]}
+{"kind":"shape","id":"sh/0z61032l","slide":3,"name":"workflow-card-4","bbox":[42,356,360,94]}
+{"kind":"textbox","id":"sh/pkzupwb2","slide":3,"name":"workflow-num-4","text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[60,373,40,40]}
+{"kind":"textbox","id":"sh/donyd0z6","slide":3,"name":"workflow-label-4","text":"PRD 生成","textPreview":"PRD 生成","textChars":6,"textLines":1,"bbox":[114,374,220,30]}
+{"kind":"textbox","id":"sh/k3q5o7qp","slide":3,"name":"workflow-code-4","text":"PRD_GENERATING","textPreview":"PRD_GENERATING","textChars":14,"textLines":1,"bbox":[114,412,260,24]}
+{"kind":"shape","id":"sh/vixczed8","slide":3,"name":"workflow-card-5","bbox":[452,356,360,94]}
+{"kind":"textbox","id":"sh/2x4nap4r","slide":3,"name":"workflow-num-5","text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[470,373,40,40]}
+{"kind":"textbox","id":"sh/dcbulwva","slide":3,"name":"workflow-label-5","text":"独立终审","textPreview":"独立终审","textChars":4,"textLines":1,"bbox":[524,374,220,30]}
+{"kind":"textbox","id":"sh/kre1w7mp","slide":3,"name":"workflow-code-5","text":"PRD_REVIEWING","textPreview":"PRD_REVIEWING","textChars":13,"textLines":1,"bbox":[524,412,260,24]}
+{"kind":"shape","id":"sh/val87ed8","slide":3,"name":"workflow-card-6","bbox":[862,356,360,94]}
+{"kind":"textbox","id":"sh/6psfil0r","slide":3,"name":"workflow-num-6","text":"6","textPreview":"6","textChars":1,"textLines":1,"bbox":[880,373,40,40]}
+{"kind":"textbox","id":"sh/d8bat47y","slide":3,"name":"workflow-label-6","text":"PRD 修订","textPreview":"PRD 修订","textChars":6,"textLines":1,"bbox":[934,374,220,30]}
+{"kind":"textbox","id":"sh/knih4byh","slide":3,"name":"workflow-code-6","text":"PRD_REVISING","textPreview":"PRD_REVISING","textChars":12,"textLines":1,"bbox":[934,412,260,24]}
+{"kind":"shape","id":"sh/yhgn29gr","slide":3,"name":"workflow-card-7","bbox":[42,488,360,94]}
+{"kind":"textbox","id":"sh/n29gr2p8","slide":3,"name":"workflow-num-7","text":"7","textPreview":"7","textChars":1,"textLines":1,"bbox":[60,505,40,40]}
+{"kind":"textbox","id":"sh/gn29gr2p","slide":3,"name":"workflow-label-7","text":"SDD 确认","textPreview":"SDD 确认","textChars":6,"textLines":1,"bbox":[114,506,220,30]}
+{"kind":"textbox","id":"sh/58z25kb6","slide":3,"name":"workflow-code-7","text":"SDD_CONFIRMING","textPreview":"SDD_CONFIRMING","textChars":14,"textLines":1,"bbox":[114,544,260,24]}
+{"kind":"shape","id":"sh/y90je9cv","slide":3,"name":"workflow-card-8","bbox":[452,488,360,94]}
+{"kind":"textbox","id":"sh/nuxc3ylc","slide":3,"name":"workflow-num-8","text":"8","textPreview":"8","textChars":1,"textLines":1,"bbox":[470,505,40,40]}
+{"kind":"textbox","id":"sh/gbq1oryt","slide":3,"name":"workflow-label-8","text":"SDD 生成","textPreview":"SDD 生成","textChars":6,"textLines":1,"bbox":[524,506,220,30]}
+{"kind":"textbox","id":"sh/5wjudg7a","slide":3,"name":"workflow-code-8","text":"SDD_GENERATING","textPreview":"SDD_GENERATING","textChars":14,"textLines":1,"bbox":[524,544,260,24]}
+{"kind":"shape","id":"sh/u54zidon","slide":3,"name":"workflow-card-9","bbox":[862,488,360,94]}
+{"kind":"textbox","id":"sh/nqxs72x4","slide":3,"name":"workflow-num-9","text":"9","textPreview":"9","textChars":1,"textLines":1,"bbox":[880,505,40,40]}
+{"kind":"textbox","id":"sh/7mp0bi9s","slide":3,"name":"workflow-label-9","text":"完成","textPreview":"完成","textChars":2,"textLines":1,"bbox":[934,506,220,30]}
+{"kind":"textbox","id":"sh/e1w7mp0b","slide":3,"name":"workflow-code-9","text":"COMPLETED","textPreview":"COMPLETED","textChars":9,"textLines":1,"bbox":[934,544,260,24]}
+{"kind":"textbox","id":"sh/psfil0rq","slide":3,"name":"workflow-note","text":"橙色边框代表需要人工门禁或人工反馈的阶段。","textPreview":"橙色边框代表需要人工门禁或人工反馈的阶段。","textChars":21,"textLines":1,"bbox":[42,632,760,28]}
+{"kind":"notes","id":"nt/6p1c8j","slide":3,"text":""}
+{"kind":"slide","id":"sl/z0av1l","slide":4,"title":"人工门禁是质量边界","textShapes":5}
+{"kind":"textbox","id":"sh/ap4r65wj","slide":4,"name":"title-4","text":"人工门禁是质量边界","textPreview":"人工门禁是质量边界","textChars":9,"textLines":1,"bbox":[42,36,820,62]}
+{"kind":"textbox","id":"sh/hgn29gr2","slide":4,"name":"subtitle-4","text":"系统不是让 LLM 自己决定能否进入下一阶段，而是由 Python 规则检查状态。","textPreview":"系统不是让 LLM 自己决定能否进入下一阶段，而是由 Python 规则检查状态。","textChars":41,"textLines":1,"bbox":[42,112,900,54]}
+{"kind":"shape","id":"sh/svu9knih","slide":4,"name":"title-rule-4","bbox":[42,176,1196,1]}
+{"kind":"textbox","id":"sh/zidonyd0","slide":4,"name":"footer-section-4","text":"Control points","textPreview":"Control points","textChars":14,"textLines":1,"bbox":[42,660,480,24]}
+{"kind":"textbox","id":"sh/a1gvy90j","slide":4,"name":"footer-page-4","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1184,660,54,24]}
+{"kind":"textbox","id":"sh/s36hcrmh","slide":4,"name":"gates-callout","text":"价值：阶段推进被规则约束，审计日志记录每次确认、回退、失败与豁免。","textPreview":"价值：阶段推进被规则约束，审计日志记录每次确认、回退、失败与豁免。","textChars":33,"textLines":1,"bbox":[42,590,960,42]}
+{"kind":"table","id":"tb/83itgfml","slide":4,"name":"","rows":5,"cols":4,"preview":"门禁 | 触发阶段 | 必须满足 | 失败时处理","bbox":[42,232,1196,320]}
+{"kind":"notes","id":"nt/z0av1l","slide":4,"text":""}
+{"kind":"slide","id":"sl/ir28wd","slide":5,"title":"四类智能体，职责隔离","textShapes":16}
+{"kind":"textbox","id":"sh/orytsvu9","slide":5,"name":"title-5","text":"四类智能体，职责隔离","textPreview":"四类智能体，职责隔离","textChars":10,"textLines":1,"bbox":[42,36,820,62]}
+{"kind":"textbox","id":"sh/z61032ls","slide":5,"name":"subtitle-5","text":"每个 Agent 绑定特定 skill，禁止 delegation，并限制迭代次数。","textPreview":"每个 Agent 绑定特定 skill，禁止 delegation，并限制迭代次数。","textChars":42,"textLines":1,"bbox":[42,112,900,54]}
+{"kind":"shape","id":"sh/al87ed8b","slide":5,"name":"title-rule-5","bbox":[42,176,1196,1]}
+{"kind":"textbox","id":"sh/h0fepkzu","slide":5,"name":"footer-section-5","text":"Agent roles","textPreview":"Agent roles","textChars":11,"textLines":1,"bbox":[42,660,480,24]}
+{"kind":"textbox","id":"sh/sfil0rqd","slide":5,"name":"footer-page-5","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1184,660,54,24]}
+{"kind":"shape","id":"sh/zupwb2hw","slide":5,"name":"agent-panel-0","bbox":[42,224,260,336]}
+{"kind":"textbox","id":"sh/a9w3m94f","slide":5,"name":"agent-title-0","text":"Product Analyst","textPreview":"Product Analyst","textChars":15,"textLines":1,"bbox":[62,248,220,56]}
+{"kind":"shape","id":"sh/hwfyxobm","slide":5,"name":"agent-rule-0","bbox":[62,326,220,1]}
+{"kind":"textbox","id":"sh/obm58z25","slide":5,"name":"agent-body-0","text":"把原始需求拆成模块、特性、数据来源、交互逻辑、影响和依赖。","textPreview":"把原始需求拆成模块、特性、数据来源、交互逻辑、影响和依赖。","textChars":29,"textLines":1,"bbox":[62,354,220,88]}
+{"kind":"textbox","id":"sh/e1w7mp0b","slide":5,"name":"agent-output-0","text":"输出结构化规格、澄清问题、逻辑问题。","textPreview":"输出结构化规格、澄清问题、逻辑问题。","textChars":18,"textLines":1,"bbox":[62,474,220,62]}
+{"kind":"shape","id":"sh/7mp0bi9s","slide":5,"name":"agent-panel-1","bbox":[341,224,260,336]}
+{"kind":"textbox","id":"sh/w7mp0bi9","slide":5,"name":"agent-title-1","text":"PRD Writer","textPreview":"PRD Writer","textChars":10,"textLines":1,"bbox":[361,248,220,56]}
+{"kind":"shape","id":"sh/psfil0rq","slide":5,"name":"agent-rule-1","bbox":[361,326,220,1]}
+{"kind":"textbox","id":"sh/epkzupwb","slide":5,"name":"agent-body-1","text":"只基于已确认事实生成可审查、可实施的 PRD。","textPreview":"只基于已确认事实生成可审查、可实施的 PRD。","textChars":23,"textLines":1,"bbox":[361,354,220,88]}
+{"kind":"textbox","id":"sh/7adsji5s","slide":5,"name":"agent-output-1","text":"输出 Markdown PRD 与验收标准。","textPreview":"输出 Markdown PRD 与验收标准。","textChars":22,"textLines":1,"bbox":[361,474,220,62]}
+{"kind":"shape","id":"sh/wval87ed","slide":5,"name":"agent-panel-2","bbox":[640,224,260,336]}
+{"kind":"textbox","id":"sh/pg3ex0nu","slide":5,"name":"agent-title-2","text":"PRD Reviewer","textPreview":"PRD Reviewer","textChars":12,"textLines":1,"bbox":[660,248,220,56]}
+{"kind":"shape","id":"sh/eloj2t83","slide":5,"name":"agent-rule-2","bbox":[660,326,220,1]}
+{"kind":"textbox","id":"sh/36hcrmhk","slide":5,"name":"agent-body-2","text":"独立发现逻辑矛盾、流程断点和场景遗漏。","textPreview":"独立发现逻辑矛盾、流程断点和场景遗漏。","textChars":19,"textLines":1,"bbox":[660,354,220,88]}
+{"kind":"textbox","id":"sh/zupwb2hw","slide":5,"name":"agent-output-2","text":"输出审查报告，不静默改写 PRD。","textPreview":"输出审查报告，不静默改写 PRD。","textChars":17,"textLines":1,"bbox":[660,474,220,62]}
+{"kind":"shape","id":"sh/a9w3m94f","slide":5,"name":"agent-panel-3","bbox":[939,224,260,336]}
+{"kind":"textbox","id":"sh/h0fepkzu","slide":5,"name":"agent-title-3","text":"Solution Architect","textPreview":"Solution Architect","textChars":18,"textLines":1,"bbox":[959,248,220,56]}
+{"kind":"shape","id":"sh/sfil0rqd","slide":5,"name":"agent-rule-3","bbox":[959,326,220,1]}
+{"kind":"textbox","id":"sh/z61032ls","slide":5,"name":"agent-body-3","text":"把终审通过 PRD 转成可开发技术契约。","textPreview":"把终审通过 PRD 转成可开发技术契约。","textChars":20,"textLines":1,"bbox":[959,354,220,88]}
+{"kind":"textbox","id":"sh/al87ed8b","slide":5,"name":"agent-output-3","text":"输出 API、数据、状态、错误与验收标准。","textPreview":"输出 API、数据、状态、错误与验收标准。","textChars":21,"textLines":1,"bbox":[959,474,220,62]}
+{"kind":"notes","id":"nt/ir28wd","slide":5,"text":""}
+{"kind":"slide","id":"sl/va5i4y","slide":6,"title":"架构：Web 管理台、API、Worker 和 MySQL 分工明确","textShapes":15}
+{"kind":"textbox","id":"sh/epkzupwb","slide":6,"name":"title-6","text":"架构：Web 管理台、API、Worker 和 MySQL 分工明确","textPreview":"架构：Web 管理台、API、Worker 和 MySQL 分工明确","textChars":34,"textLines":1,"bbox":[42,36,820,62]}
+{"kind":"textbox","id":"sh/pg3ex0nu","slide":6,"name":"subtitle-6","text":"前端负责交互，FastAPI 负责项目与配置，Worker 执行 CrewAI Flow，MySQL 保存状态。","textPreview":"前端负责交互，FastAPI 负责项目与配置，Worker 执行 CrewAI Flow，MySQL 保存状态。","textChars":56,"textLines":1,"bbox":[42,112,900,54]}
+{"kind":"shape","id":"sh/wval87ed","slide":6,"name":"title-rule-6","bbox":[42,176,1196,1]}
+{"kind":"textbox","id":"sh/7mp0bi9s","slide":6,"name":"footer-section-6","text":"System architecture","textPreview":"System architecture","textChars":19,"textLines":1,"bbox":[42,660,480,24]}
+{"kind":"textbox","id":"sh/e1w7mp0b","slide":6,"name":"footer-page-6","text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1184,660,54,24]}
+{"kind":"shape","id":"sh/psfil0rq","slide":6,"name":"arch-block-0","bbox":[42,236,330,106]}
+{"kind":"textbox","id":"sh/w7mp0bi9","slide":6,"name":"arch-title-0","text":"Vue 3 Web 管理台","textPreview":"Vue 3 Web 管理台","textChars":13,"textLines":1,"bbox":[64,256,286,30]}
+{"kind":"textbox","id":"sh/7u54zido","slide":6,"name":"arch-body-0","text":"项目创建 / 门禁确认 / 导出","textPreview":"项目创建 / 门禁确认 / 导出","textChars":16,"textLines":1,"bbox":[64,298,286,28]}
+{"kind":"shape","id":"sh/ed8bat47","slide":6,"name":"arch-block-1","bbox":[475,236,330,106]}
+{"kind":"textbox","id":"sh/onyd0z61","slide":6,"name":"arch-title-1","text":"FastAPI","textPreview":"FastAPI","textChars":7,"textLines":1,"bbox":[497,256,286,30]}
+{"kind":"textbox","id":"sh/d8v6psfi","slide":6,"name":"arch-body-1","text":"认证、项目、LLM 配置、导出","textPreview":"认证、项目、LLM 配置、导出","textChars":15,"textLines":1,"bbox":[497,298,286,28]}
+{"kind":"shape","id":"sh/6hcrmhk3","slide":6,"name":"arch-block-2","bbox":[908,236,330,106]}
+{"kind":"textbox","id":"sh/z25kb6xk","slide":6,"name":"arch-title-2","text":"Async Worker","textPreview":"Async Worker","textChars":12,"textLines":1,"bbox":[930,256,286,30]}
+{"kind":"textbox","id":"sh/ovahoza1","slide":6,"name":"arch-body-2","text":"轮询任务队列并运行 Flow","textPreview":"轮询任务队列并运行 Flow","textChars":14,"textLines":1,"bbox":[930,298,286,28]}
+{"kind":"shape","id":"sh/dg7adsji","slide":6,"name":"arch-block-3","bbox":[258,470,330,106]}
+{"kind":"textbox","id":"sh/6tovahoz","slide":6,"name":"arch-title-3","text":"MySQL 8.0+","textPreview":"MySQL 8.0+","textChars":10,"textLines":1,"bbox":[280,490,286,30]}
+{"kind":"textbox","id":"sh/vahoza1g","slide":6,"name":"arch-body-3","text":"项目状态、任务、审查、历史","textPreview":"项目状态、任务、审查、历史","textChars":13,"textLines":1,"bbox":[280,532,286,28]}
+{"kind":"shape","id":"sh/o7qpg3ex","slide":6,"name":"arch-block-4","bbox":[692,470,330,106]}
+{"kind":"textbox","id":"sh/dsji5sne","slide":6,"name":"arch-title-4","text":"LLM Providers","textPreview":"LLM Providers","textChars":13,"textLines":1,"bbox":[714,490,286,30]}
+{"kind":"textbox","id":"sh/hk3q5o7q","slide":6,"name":"arch-body-4","text":"OpenAI / DeepSeek / Ollama / Custom","textPreview":"OpenAI / DeepSeek / Ollama / Custom","textChars":35,"textLines":1,"bbox":[714,532,286,28]}
+{"kind":"shape","id":"sh/oza1gvy9","slide":6,"name":"arch-flow-a","bbox":[372,288,103,3]}
+{"kind":"shape","id":"sh/zed8v6ps","slide":6,"name":"arch-flow-b","bbox":[805,288,103,3]}
+{"kind":"shape","id":"sh/6xkf6dcb","slide":6,"name":"arch-flow-c","bbox":[604,392,3,92]}
+{"kind":"shape","id":"sh/hwfyxobm","slide":6,"name":"arch-flow-d","bbox":[672,392,3,92]}
+{"kind":"textbox","id":"sh/obm58z25","slide":6,"name":"arch-note","text":"开发模式需要 API、Worker、Vue 三个进程；生产模式由 FastAPI 托管已构建前端。","textPreview":"开发模式需要 API、Worker、Vue 三个进程；生产模式由 FastAPI 托管已构建前端。","textChars":49,"textLines":1,"bbox":[42,620,1010,32]}
+{"kind":"notes","id":"nt/va5i4y","slide":6,"text":""}
+{"kind":"slide","id":"sl/u63fjx","slide":7,"title":"同一套工作流，三种操作面","textShapes":17}
+{"kind":"textbox","id":"sh/mp0bi9s3","slide":7,"name":"title-7","text":"同一套工作流，三种操作面","textPreview":"同一套工作流，三种操作面","textChars":12,"textLines":1,"bbox":[42,36,820,62]}
+{"kind":"textbox","id":"sh/tgfmlkjm","slide":7,"name":"subtitle-7","text":"Web、API 和 CLI 都围绕同一份 ProjectState 与工件版本工作。","textPreview":"Web、API 和 CLI 都围绕同一份 ProjectState 与工件版本工作。","textChars":42,"textLines":1,"bbox":[42,112,900,54]}
+{"kind":"shape","id":"sh/4vmtwra5","slide":7,"name":"title-rule-7","bbox":[42,176,1196,1]}
+{"kind":"textbox","id":"sh/bm58z25k","slide":7,"name":"footer-section-7","text":"Interfaces","textPreview":"Interfaces","textChars":10,"textLines":1,"bbox":[42,660,480,24]}
+{"kind":"textbox","id":"sh/m1cfa9w3","slide":7,"name":"footer-page-7","text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1184,660,54,24]}
+{"kind":"shape","id":"sh/tsvu9kni","slide":7,"name":"surface-card-0","bbox":[42,238,360,338]}
+{"kind":"textbox","id":"sh/47y1kre1","slide":7,"name":"surface-card-title-0","text":"Web 管理台","textPreview":"Web 管理台","textChars":7,"textLines":1,"bbox":[66,264,300,40]}
+{"kind":"textbox","id":"sh/bq1oryts","slide":7,"name":"surface-card-subtitle-0","text":"给产品和业务方使用","textPreview":"给产品和业务方使用","textChars":9,"textLines":1,"bbox":[66,322,300,30]}
+{"kind":"shape","id":"sh/m58z25kb","slide":7,"name":"surface-card-rule-0","bbox":[66,374,312,1]}
+{"kind":"textbox","id":"sh/o7qpg3ex","slide":7,"name":"surface-card-list-0","text":"• 创建项目\n• 确认阶段\n• 配置 LLM\n• 导出 PRD/SDD","textPreview":"• 创建项目 | • 确认阶段 | • 配置 LLM | • 导出 PRD/SDD","textChars":35,"textLines":4,"bbox":[66,406,300,120]}
+{"kind":"textbox","id":"sh/dsji5sne","slide":7,"name":"surface-card-best-0","text":"适合：日常协作与人工门禁","textPreview":"适合：日常协作与人工门禁","textChars":12,"textLines":1,"bbox":[66,526,300,28]}
+{"kind":"shape","id":"sh/61032lsz","slide":7,"name":"surface-card-1","bbox":[452,238,360,338]}
+{"kind":"textbox","id":"sh/vmtwra5g","slide":7,"name":"surface-card-title-1","text":"FastAPI","textPreview":"FastAPI","textChars":7,"textLines":1,"bbox":[476,264,300,40]}
+{"kind":"textbox","id":"sh/oj2t83it","slide":7,"name":"surface-card-subtitle-1","text":"给前端和内部系统集成","textPreview":"给前端和内部系统集成","textChars":10,"textLines":1,"bbox":[476,322,300,30]}
+{"kind":"shape","id":"sh/d4vmtwra","slide":7,"name":"surface-card-rule-1","bbox":[476,374,312,1]}
+{"kind":"textbox","id":"sh/6dcbulwv","slide":7,"name":"surface-card-list-1","text":"• Cookie 认证\n• 项目管理\n• 任务状态\n• 工件导出","textPreview":"• Cookie 认证 | • 项目管理 | • 任务状态 | • 工件导出","textChars":32,"textLines":4,"bbox":[476,406,300,120]}
+{"kind":"textbox","id":"sh/vy90je9c","slide":7,"name":"surface-card-best-1","text":"适合：平台化接入","textPreview":"适合：平台化接入","textChars":8,"textLines":1,"bbox":[476,526,300,28]}
+{"kind":"shape","id":"sh/onyd0z61","slide":7,"name":"surface-card-2","bbox":[862,238,360,338]}
+{"kind":"textbox","id":"sh/d8v6psfi","slide":7,"name":"surface-card-title-2","text":"Typer CLI","textPreview":"Typer CLI","textChars":9,"textLines":1,"bbox":[886,264,300,40]}
+{"kind":"textbox","id":"sh/1cfa9w3m","slide":7,"name":"surface-card-subtitle-2","text":"给开发者和脚本使用","textPreview":"给开发者和脚本使用","textChars":9,"textLines":1,"bbox":[886,322,300,30]}
+{"kind":"shape","id":"sh/crmhk3q5","slide":7,"name":"surface-card-rule-2","bbox":[886,374,312,1]}
+{"kind":"textbox","id":"sh/j6tovaho","slide":7,"name":"surface-card-list-2","text":"• new / resume\n• status / export\n• api / worker","textPreview":"• new / resume | • status / export | • api / worker","textChars":47,"textLines":3,"bbox":[886,406,300,90]}
+{"kind":"textbox","id":"sh/ulwval87","slide":7,"name":"surface-card-best-2","text":"适合：本地调试与自动化","textPreview":"适合：本地调试与自动化","textChars":11,"textLines":1,"bbox":[886,526,300,28]}
+{"kind":"textbox","id":"sh/1kre1w7m","slide":7,"name":"surface-shared-state","text":"共同底座：ProjectState、工件版本、审计事件、MySQL 任务队列。","textPreview":"共同底座：ProjectState、工件版本、审计事件、MySQL 任务队列。","textChars":39,"textLines":1,"bbox":[42,604,930,32]}
+{"kind":"notes","id":"nt/u63fjx","slide":7,"text":""}
+{"kind":"slide","id":"sl/ttx4lb","slide":8,"title":"数据模型让需求可追溯","textShapes":14}
+{"kind":"textbox","id":"sh/sneloj2t","slide":8,"name":"title-8","text":"数据模型让需求可追溯","textPreview":"数据模型让需求可追溯","textChars":10,"textLines":1,"bbox":[42,36,820,62]}
+{"kind":"textbox","id":"sh/32lszqtc","slide":8,"name":"subtitle-8","text":"ProjectState 保存阶段、状态、轮次、问题、审批、工件版本和审计事件。","textPreview":"ProjectState 保存阶段、状态、轮次、问题、审批、工件版本和审计事件。","textChars":40,"textLines":1,"bbox":[42,112,900,54]}
+{"kind":"shape","id":"sh/ahoza1gv","slide":8,"name":"title-rule-8","bbox":[42,176,1196,1]}
+{"kind":"textbox","id":"sh/lkjm1cfa","slide":8,"name":"footer-section-8","text":"Data model","textPreview":"Data model","textChars":10,"textLines":1,"bbox":[42,660,480,24]}
+{"kind":"textbox","id":"sh/szqtcj6t","slide":8,"name":"footer-page-8","text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1184,660,54,24]}
+{"kind":"shape","id":"sh/3ex0nuxc","slide":8,"name":"data-chart-frame","bbox":[42,220,548,390]}
+{"kind":"shape","id":"sh/loj2t83i","slide":8,"name":"data-object-0","bbox":[636,220,602,58]}
+{"kind":"textbox","id":"sh/w3m94fu1","slide":8,"name":"data-object-title-0","text":"RequirementSpec","textPreview":"RequirementSpec","textChars":15,"textLines":1,"bbox":[656,230,210,24]}
+{"kind":"textbox","id":"sh/udg7adsj","slide":8,"name":"data-object-body-0","text":"模块、特性、数据来源、交互、影响、依赖、规则、假设。","textPreview":"模块、特性、数据来源、交互、影响、依赖、规则、假设。","textChars":26,"textLines":1,"bbox":[884,230,330,34]}
+{"kind":"shape","id":"sh/nyd0z610","slide":8,"name":"data-object-1","bbox":[636,296,602,58]}
+{"kind":"textbox","id":"sh/cj6tovah","slide":8,"name":"data-object-title-1","text":"ClarificationQuestion","textPreview":"ClarificationQuestion","textChars":21,"textLines":1,"bbox":[656,306,210,24]}
+{"kind":"textbox","id":"sh/54zidony","slide":8,"name":"data-object-body-1","text":"Q-001 形式编号，记录问题类型、重要性、状态和答案。","textPreview":"Q-001 形式编号，记录问题类型、重要性、状态和答案。","textChars":28,"textLines":1,"bbox":[884,306,330,34]}
+{"kind":"shape","id":"sh/upwb2hwf","slide":8,"name":"data-object-2","bbox":[636,372,602,58]}
+{"kind":"textbox","id":"sh/nap4r65w","slide":8,"name":"data-object-title-2","text":"LogicIssue","textPreview":"LogicIssue","textChars":10,"textLines":1,"bbox":[656,382,210,24]}
+{"kind":"textbox","id":"sh/cvixczed","slide":8,"name":"data-object-body-2","text":"L-001 形式编号，区分 blocking / important / suggestion。","textPreview":"L-001 形式编号，区分 blocking / important / suggestion。","textChars":48,"textLines":1,"bbox":[884,382,330,34]}
+{"kind":"shape","id":"sh/5gbq1ory","slide":8,"name":"data-object-3","bbox":[636,448,602,58]}
+{"kind":"textbox","id":"sh/u18jqh0f","slide":8,"name":"data-object-title-3","text":"ArtifactVersion","textPreview":"ArtifactVersion","textChars":15,"textLines":1,"bbox":[656,458,210,24]}
+{"kind":"textbox","id":"sh/jm1cfa9w","slide":8,"name":"data-object-body-3","text":"PRD、PRD Review、SDD 按版本保存，便于导出与回溯。","textPreview":"PRD、PRD Review、SDD 按版本保存，便于导出与回溯。","textChars":33,"textLines":1,"bbox":[884,458,330,34]}
+{"kind":"shape","id":"sh/bm58z25k","slide":8,"name":"data-object-4","bbox":[636,524,602,58]}
+{"kind":"textbox","id":"sh/m1cfa9w3","slide":8,"name":"data-object-title-4","text":"AuditEvent","textPreview":"AuditEvent","textChars":10,"textLines":1,"bbox":[656,534,210,24]}
+{"kind":"textbox","id":"sh/tsvu9kni","slide":8,"name":"data-object-body-4","text":"记录项目创建、阶段推进、失败、回退和豁免。","textPreview":"记录项目创建、阶段推进、失败、回退和豁免。","textChars":21,"textLines":1,"bbox":[884,534,330,34]}
+{"kind":"chart","id":"ch/qh0fepkz","slide":8,"name":"","chartType":"bar","bbox":[76,262,484,300]}
+{"kind":"notes","id":"nt/ttx4lb","slide":8,"text":""}
+{"kind":"slide","id":"sl/2d75fd","slide":9,"title":"启动路径围绕数据库、API、Worker、前端展开","textShapes":20}
+{"kind":"textbox","id":"sh/29gr2p8n","slide":9,"name":"title-9","text":"启动路径围绕数据库、API、Worker、前端展开","textPreview":"启动路径围绕数据库、API、Worker、前端展开","textChars":25,"textLines":1,"bbox":[42,36,820,62]}
+{"kind":"textbox","id":"sh/d0z61032","slide":9,"name":"subtitle-9","text":"本地开发强调三进程协作；生产构建后前端由 API 静态托管。","textPreview":"本地开发强调三进程协作；生产构建后前端由 API 静态托管。","textChars":30,"textLines":1,"bbox":[42,112,900,54]}
+{"kind":"shape","id":"sh/kf6dcbul","slide":9,"name":"title-rule-9","bbox":[42,176,1196,1]}
+{"kind":"textbox","id":"sh/v6psfil0","slide":9,"name":"footer-section-9","text":"Runbook","textPreview":"Runbook","textChars":7,"textLines":1,"bbox":[42,660,480,24]}
+{"kind":"textbox","id":"sh/2lszqtcj","slide":9,"name":"footer-page-9","text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1184,660,54,24]}
+{"kind":"shape","id":"sh/d8bat47y","slide":9,"name":"ops-step-0","bbox":[42,252,205,212]}
+{"kind":"textbox","id":"sh/knih4byh","slide":9,"name":"ops-num-0","text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[60,274,56,30]}
+{"kind":"textbox","id":"sh/val87ed8","slide":9,"name":"ops-title-0","text":"配置","textPreview":"配置","textChars":2,"textLines":1,"bbox":[60,330,160,34]}
+{"kind":"textbox","id":"sh/6psfil0r","slide":9,"name":"ops-body-0","text":"复制 .env，写入 LLM 与 MySQL 连接。","textPreview":"复制 .env，写入 LLM 与 MySQL 连接。","textChars":26,"textLines":1,"bbox":[60,390,166,56]}
+{"kind":"shape","id":"sh/4r65wjud","slide":9,"name":"ops-step-1","bbox":[281,252,205,212]}
+{"kind":"textbox","id":"sh/xc3ylc7u","slide":9,"name":"ops-num-1","text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[299,274,56,30]}
+{"kind":"textbox","id":"sh/mlkjm1cf","slide":9,"name":"ops-title-1","text":"迁移","textPreview":"迁移","textChars":2,"textLines":1,"bbox":[299,330,160,34]}
+{"kind":"textbox","id":"sh/f6dcbulw","slide":9,"name":"ops-body-1","text":"uv run prd-agent db-upgrade","textPreview":"uv run prd-agent db-upgrade","textChars":27,"textLines":1,"bbox":[299,390,166,56]}
+{"kind":"shape","id":"sh/4zidonyd","slide":9,"name":"ops-step-2","bbox":[520,252,205,212]}
+{"kind":"textbox","id":"sh/xkf6dcbu","slide":9,"name":"ops-num-2","text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[538,274,56,30]}
+{"kind":"textbox","id":"sh/mtwra5gb","slide":9,"name":"ops-title-2","text":"API","textPreview":"API","textChars":3,"textLines":1,"bbox":[538,330,160,34]}
+{"kind":"textbox","id":"sh/fepkzupw","slide":9,"name":"ops-body-2","text":"uv run prd-agent api","textPreview":"uv run prd-agent api","textChars":20,"textLines":1,"bbox":[538,390,166,56]}
+{"kind":"shape","id":"sh/83itgfml","slide":9,"name":"ops-step-3","bbox":[759,252,205,212]}
+{"kind":"textbox","id":"sh/xobm58z2","slide":9,"name":"ops-num-3","text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[777,274,56,30]}
+{"kind":"textbox","id":"sh/lszqtcj6","slide":9,"name":"ops-title-3","text":"Worker","textPreview":"Worker","textChars":6,"textLines":1,"bbox":[777,330,160,34]}
+{"kind":"textbox","id":"sh/s72x4nap","slide":9,"name":"ops-body-3","text":"uv run prd-agent worker","textPreview":"uv run prd-agent worker","textChars":23,"textLines":1,"bbox":[777,390,166,56]}
+{"kind":"shape","id":"sh/3m94fu18","slide":9,"name":"ops-step-4","bbox":[998,252,205,212]}
+{"kind":"textbox","id":"sh/a5gbq1or","slide":9,"name":"ops-num-4","text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1016,274,56,30]}
+{"kind":"textbox","id":"sh/h4byhgn2","slide":9,"name":"ops-title-4","text":"Web","textPreview":"Web","textChars":3,"textLines":1,"bbox":[1016,330,160,34]}
+{"kind":"textbox","id":"sh/sji5snel","slide":9,"name":"ops-body-4","text":"cd web && pnpm dev","textPreview":"cd web && pnpm dev","textChars":18,"textLines":1,"bbox":[1016,390,166,56]}
+{"kind":"textbox","id":"sh/3ylc7u54","slide":9,"name":"ops-prod","text":"生产模式：先 `cd web && pnpm build`，再启动 API 与 Worker；访问 API 服务地址即可使用管理台。","textPreview":"生产模式：先 `cd web && pnpm build`，再启动 API 与 Worker；访问 API 服务地址即可使用管理台。","textChars":66,"textLines":1,"bbox":[42,560,1040,42]}
+{"kind":"notes","id":"nt/2d75fd","slide":9,"text":""}
+{"kind":"slide","id":"sl/sdxv51","slide":10,"title":"落地价值：把“文档生成”升级成“需求治理”","textShapes":9}
+{"kind":"textbox","id":"sh/bq1oryts","slide":10,"name":"title-10","text":"落地价值：把“文档生成”升级成“需求治理”","textPreview":"落地价值：把“文档生成”升级成“需求治理”","textChars":21,"textLines":1,"bbox":[42,36,820,62]}
+{"kind":"textbox","id":"sh/4byhgn29","slide":10,"name":"subtitle-10","text":"PRD Agent 的重点不是一次性输出，而是让需求推进、审查和交付都可控。","textPreview":"PRD Agent 的重点不是一次性输出，而是让需求推进、审查和交付都可控。","textChars":38,"textLines":1,"bbox":[42,112,900,54]}
+{"kind":"shape","id":"sh/twra5gbq","slide":10,"name":"title-rule-10","bbox":[42,176,1196,1]}
+{"kind":"textbox","id":"sh/mhk3q5o7","slide":10,"name":"footer-section-10","text":"Takeaways","textPreview":"Takeaways","textChars":9,"textLines":1,"bbox":[42,660,480,24]}
+{"kind":"textbox","id":"sh/b2hwfyxo","slide":10,"name":"footer-page-10","text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1184,660,54,24]}
+{"kind":"textbox","id":"sh/4nap4r65","slide":10,"name":"outcome-main","text":"适合用在需要强确认、强追溯、强审查的产品需求流程。","textPreview":"适合用在需要强确认、强追溯、强审查的产品需求流程。","textChars":25,"textLines":1,"bbox":[42,232,760,120]}
+{"kind":"textbox","id":"sh/t83itgfm","slide":10,"name":"outcome-bullets","text":"• 需求结构化前置，避免把假设写进 PRD。\n• 人工门禁控制阶段推进，避免 LLM 自主越权。\n• PRD Writer 与 Reviewer 分离，提高终审质量。\n• SDD 只来自通过终审的 PRD，减少开发歧义。","textPreview":"• 需求结构化前置，避免把假设写进 PRD。 | • 人工门禁控制阶段推进，避免 LLM 自主越权。 | • PRD Writer 与 Reviewer 分离，提高终审质量。 | • SDD 只来自通过终审的 PRD，减少开发歧义。","textChars":110,"textLines":4,"bbox":[42,390,730,152]}
+{"kind":"shape","id":"sh/mp0bi9s3","slide":10,"name":"outcome-next","bbox":[860,232,378,282]}
+{"kind":"textbox","id":"sh/bat47y1k","slide":10,"name":"outcome-next-title","text":"建议下一步","textPreview":"建议下一步","textChars":5,"textLines":1,"bbox":[890,266,310,40]}
+{"kind":"textbox","id":"sh/ji5snelo","slide":10,"name":"outcome-next-body","text":"用一个真实需求跑完从 STRUCTURING 到 SDD 的闭环，记录每个门禁点需要业务方确认的材料。","textPreview":"用一个真实需求跑完从 STRUCTURING 到 SDD 的闭环，记录每个门禁点需要业务方确认的材料。","textChars":51,"textLines":1,"bbox":[890,334,300,124]}
+{"kind":"shape","id":"sh/uxc3ylc7","slide":10,"name":"outcome-tag","bbox":[860,552,378,62]}
+{"kind":"textbox","id":"sh/1kre1w7m","slide":10,"name":"outcome-tag-text","text":"定位：受控需求工作台","textPreview":"定位：受控需求工作台","textChars":10,"textLines":1,"bbox":[890,569,300,28]}
+{"kind":"notes","id":"nt/sdxv51","slide":10,"text":""}

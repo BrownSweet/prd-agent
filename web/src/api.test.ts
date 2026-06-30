@@ -82,6 +82,33 @@ describe('API writes', () => {
     })
   })
 
+  it('sends multipart project creation when files are provided', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          code: 'success',
+          data: { projectId: 'project-1', jobId: 'job-1' },
+          message: 'accepted',
+        }),
+        { status: 202, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal('crypto', { randomUUID: () => 'request-key-0002' })
+
+    const file = new File(['# 需求'], 'requirement.md', { type: 'text/markdown' })
+    await api.createProject('补充文字', 'config-1', [file])
+
+    const [, options] = fetchMock.mock.calls[0]
+    const body = options.body as FormData
+    expect(options.method).toBe('POST')
+    expect(options.headers['Idempotency-Key']).toBe('request-key-0002')
+    expect(options.headers['Content-Type']).toBeUndefined()
+    expect(body.get('requirement')).toBe('补充文字')
+    expect(body.get('llmConfigId')).toBe('config-1')
+    expect(body.get('files')).toBe(file)
+  })
+
   it('submits controlled rollback with target stage and feedback', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(

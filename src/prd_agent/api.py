@@ -7,16 +7,22 @@ from pathlib import Path
 from secrets import token_urlsafe
 from typing import Annotated, Any
 
-from fastapi import FastAPI, Header, Query, Request, Response
+from fastapi import FastAPI, Header, Query, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 from pwdlib import PasswordHash
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from starlette.concurrency import run_in_threadpool
 
+from prd_agent.attachments import (
+    IncomingAttachment,
+    attachment_kind,
+    resolve_attachment_path,
+    store_incoming_attachment,
+)
 from prd_agent.flow import rollback_targets_for
 from prd_agent.gates import (
     WorkflowGateError,
@@ -489,13 +495,14 @@ def _register_routes(
     prefix = "/api/v1"
 
     @app.post(f"{prefix}/projects", status_code=202)
-    def create_project(
-        body: ProjectCreate,
+    async def create_project(
+        request: Request,
         idempotency_key: IdempotencyKey,
     ) -> dict[str, Any]:
         existing = repo.get_job_by_idempotency(idempotency_key)
         if existing:
             return _ok(existing.result_json or _job_data(existing), "accepted")
+        body, uploads = await _read_project_create_request(request, settings)
         config = (
             repo.get_llm_config(body.llm_config_id)
             if body.llm_config_id
@@ -506,7 +513,21 @@ def _register_routes(
                 "尚未配置默认LLM，请先在设置页创建配置"
             )
         engine = workflow_for_config(repo, settings, config)
-        state = engine.initialize_project(body.requirement, config.id)
+        state = engine.initialize_project(
+            body.requirement,
+            config.id,
+            allow_empty_requirement=bool(uploads),
+        )
+        if uploads:
+            stored = [
+                store_incoming_attachment(
+                    settings.resolved_upload_dir,
+                    state.project_id,
+                    upload,
+                )
+                for upload in uploads
+            ]
+            repo.create_project_attachments(state.project_id, stored)
         job = repo.enqueue_job(
             job_type=JobType.WORKFLOW,
             idempotency_key=idempotency_key,
@@ -540,6 +561,21 @@ def _register_routes(
     @app.get(f"{prefix}/projects/{{project_id}}")
     def get_project(project_id: str) -> dict[str, Any]:
         return _ok(_project_detail(repo, project_id))
+
+    @app.get(f"{prefix}/projects/{{project_id}}/attachments/{{attachment_id}}/download")
+    def download_attachment(project_id: str, attachment_id: str) -> FileResponse:
+        attachment = repo.get_project_attachment(project_id, attachment_id)
+        path = resolve_attachment_path(
+            settings.resolved_upload_dir,
+            attachment.stored_path,
+        )
+        if not path.is_file():
+            raise LookupError(f"附件文件不存在：{attachment_id}")
+        return FileResponse(
+            path,
+            media_type=attachment.content_type or "application/octet-stream",
+            filename=attachment.original_filename,
+        )
 
     @app.post(f"{prefix}/projects/{{project_id}}/answers", status_code=202)
     def submit_answers(
@@ -904,6 +940,68 @@ def _project_config(
     return repo.get_llm_config(record.llm_config_id)
 
 
+async def _read_project_create_request(
+    request: Request,
+    settings: Settings,
+) -> tuple[ProjectCreate, list[IncomingAttachment]]:
+    content_type = request.headers.get("content-type", "")
+    if content_type.startswith("multipart/form-data"):
+        form = await request.form()
+        requirement = str(form.get("requirement") or "")
+        llm_config_id = form.get("llmConfigId") or form.get("llm_config_id")
+        uploads = await _read_uploads(form, settings)
+        if not requirement.strip() and not uploads:
+            raise ValueError("需求描述或附件至少填写一项")
+        return (
+            ProjectCreate(
+                requirement=requirement or " ",
+                llmConfigId=str(llm_config_id) if llm_config_id else None,
+            ),
+            uploads,
+        )
+
+    try:
+        payload = await request.json()
+        return ProjectCreate.model_validate(payload), []
+    except ValidationError as exc:
+        raise ValueError(str(exc)) from exc
+
+
+async def _read_uploads(
+    form: Any,
+    settings: Settings,
+) -> list[IncomingAttachment]:
+    values = [*form.getlist("files"), *form.getlist("files[]")]
+    files = [item for item in values if getattr(item, "filename", None)]
+    if len(files) > settings.upload_max_files_per_project:
+        raise ValueError(
+            f"最多只能上传{settings.upload_max_files_per_project}个附件"
+        )
+
+    uploads: list[IncomingAttachment] = []
+    total_size = 0
+    for item in files:
+        if not isinstance(item, UploadFile) and not hasattr(item, "read"):
+            continue
+        content = await item.read()
+        if not content:
+            raise ValueError(f"附件不能为空：{item.filename}")
+        total_size += len(content)
+        if total_size > settings.upload_max_bytes:
+            raise ValueError(
+                f"附件总大小不能超过{settings.upload_max_bytes // 1024 // 1024}MB"
+            )
+        attachment_kind(str(item.filename))
+        uploads.append(
+            IncomingAttachment(
+                filename=str(item.filename),
+                content_type=getattr(item, "content_type", None),
+                content=content,
+            )
+        )
+    return uploads
+
+
 def _project_detail(
     repo: SQLAlchemyRepository,
     project_id: str,
@@ -913,6 +1011,7 @@ def _project_detail(
     active_job = repo.get_active_job(project_id)
     latest_job = repo.get_latest_project_job(project_id)
     artifacts = repo.list_artifacts(project_id)
+    attachments = repo.list_project_attachments(project_id)
     config = (
         repo.get_llm_config(record.llm_config_id)
         if record.llm_config_id
@@ -927,6 +1026,7 @@ def _project_detail(
         "artifacts": [
             _artifact_data(item, include_content=False) for item in artifacts
         ],
+        "attachments": [_attachment_data(item) for item in attachments],
         "gateErrors": _gate_errors(state),
         "allowedActions": _allowed_actions(state, active_job, record.archived_at),
         "rollbackTargets": (
@@ -934,6 +1034,20 @@ def _project_detail(
             if active_job or record.archived_at
             else _rollback_targets(state)
         ),
+    }
+
+
+def _attachment_data(record: Any) -> dict[str, Any]:
+    return {
+        "attachmentId": record.id,
+        "filename": record.original_filename,
+        "contentType": record.content_type,
+        "sizeBytes": record.size_bytes,
+        "kind": record.kind,
+        "status": record.status,
+        "errorMessage": record.error_message,
+        "createdAt": record.created_at,
+        "updatedAt": record.updated_at,
     }
 
 

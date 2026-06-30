@@ -88,6 +88,9 @@ class JobType(StrEnum):
 class SourceInput(Schema):
     text: str = Field(min_length=1)
     created_at: datetime = Field(default_factory=utc_now)
+    source_type: str = "text"
+    filename: str | None = None
+    attachment_id: str | None = None
 
 
 class RequirementFeature(Schema):

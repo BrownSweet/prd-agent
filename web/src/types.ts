@@ -81,6 +81,18 @@ export interface ArtifactSummary {
   content?: string
 }
 
+export interface ProjectAttachment {
+  attachmentId: string
+  filename: string
+  contentType: string | null
+  sizeBytes: number
+  kind: string
+  status: 'pending' | 'processed' | 'failed'
+  errorMessage: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface RequirementSpec {
   title: string
   summary: string
@@ -125,6 +137,7 @@ export interface ProjectDetail {
   lastJob: Job | null
   llmConfig: LlmConfig | null
   artifacts: ArtifactSummary[]
+  attachments: ProjectAttachment[]
   gateErrors: string[]
   allowedActions: string[]
   rollbackTargets: Array<{

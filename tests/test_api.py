@@ -233,6 +233,55 @@ def test_api_creates_project_with_idempotent_queued_job(
         assert conflict.json()["code"] == "active_job"
 
 
+def test_api_creates_project_with_uploaded_attachment(
+    repository: SQLAlchemyRepository,
+    test_database_url: str,
+    tmp_path,
+) -> None:
+    settings = api_settings(test_database_url).model_copy(
+        update={"upload_dir": tmp_path}
+    )
+    app = create_app(settings, repository)
+    headers = {"Idempotency-Key": "create-project-upload-001"}
+
+    with TestClient(app) as client:
+        client.post(
+            "/api/v1/auth/setup",
+            json={"username": "admin", "password": "secure-password"},
+        )
+        response = client.post(
+            "/api/v1/projects",
+            headers=headers,
+            data={"requirement": "补充 Markdown 需求"},
+            files={
+                "files": (
+                    "brief.md",
+                    "# Brief\n\n上传内容".encode(),
+                    "text/markdown",
+                )
+            },
+        )
+        repeated = client.post(
+            "/api/v1/projects",
+            headers=headers,
+            data={"requirement": "不应创建第二个附件"},
+            files={"files": ("other.md", b"ignored", "text/markdown")},
+        )
+
+        assert response.status_code == 202
+        assert repeated.json()["data"]["jobId"] == response.json()["data"]["jobId"]
+        project_id = response.json()["data"]["projectId"]
+
+        attachments = repository.list_project_attachments(project_id)
+        assert len(attachments) == 1
+        assert attachments[0].original_filename == "brief.md"
+        assert (tmp_path / attachments[0].stored_path).is_file()
+
+        detail = client.get(f"/api/v1/projects/{project_id}")
+        assert detail.status_code == 200
+        assert detail.json()["data"]["attachments"][0]["filename"] == "brief.md"
+
+
 def test_api_masks_keys_and_preserves_key_on_blank_update(
     repository: SQLAlchemyRepository,
     test_database_url: str,

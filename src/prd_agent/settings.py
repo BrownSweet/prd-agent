@@ -37,10 +37,19 @@ class Settings(BaseSettings):
     project_root: Path = Field(
         default_factory=lambda: Path(__file__).resolve().parents[2]
     )
+    upload_dir: Path = Path("uploads")
+    upload_max_bytes: int = Field(default=20 * 1024 * 1024, ge=1)
+    upload_max_files_per_project: int = Field(default=8, ge=1, le=50)
 
     @property
     def skill_root(self) -> Path:
         return self.project_root / "skills"
+
+    @property
+    def resolved_upload_dir(self) -> Path:
+        if self.upload_dir.is_absolute():
+            return self.upload_dir
+        return self.project_root / self.upload_dir
 
     @property
     def resolved_llm_model(self) -> str | None:

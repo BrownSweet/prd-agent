@@ -55,6 +55,42 @@ def test_mysql_json_and_utc_round_trip(
     assert record.created_at.tzinfo == timezone.utc
 
 
+def test_mysql_project_attachments_round_trip(
+    repository: SQLAlchemyRepository,
+) -> None:
+    state = ProjectState()
+    repository.create_project(state)
+    repository.create_project_attachments(
+        state.project_id,
+        [
+            {
+                "id": "attachment-1",
+                "original_filename": "brief.md",
+                "stored_path": f"{state.project_id}/attachment-1-brief.md",
+                "content_type": "text/markdown",
+                "size_bytes": 12,
+                "sha256": "a" * 64,
+                "kind": "text",
+            }
+        ],
+    )
+
+    attachments = repository.list_project_attachments(state.project_id)
+    assert len(attachments) == 1
+    assert attachments[0].status == "pending"
+    assert attachments[0].created_at.tzinfo == timezone.utc
+
+    updated = repository.update_project_attachment(
+        "attachment-1",
+        status="processed",
+        extracted_text="附件内容",
+        error_message=None,
+    )
+
+    assert updated.status == "processed"
+    assert updated.extracted_text == "附件内容"
+
+
 def test_mysql_cascade_delete_removes_project_children(
     repository: SQLAlchemyRepository,
 ) -> None:

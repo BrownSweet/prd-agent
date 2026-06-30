@@ -55,6 +55,10 @@ def test_job_runner_returns_gate_errors_without_failing_job(monkeypatch) -> None
     )
 
     class Repository:
+        def list_project_attachments(self, project_id: str) -> list[object]:
+            assert project_id == "project-1"
+            return []
+
         def get_llm_config(self, config_id: str):
             return SimpleNamespace(id=config_id, version=1, archived_at=None)
 
@@ -88,3 +92,64 @@ def test_job_runner_returns_gate_errors_without_failing_job(monkeypatch) -> None
         "stageStatus": "waiting_user",
         "gateErrors": ["交互逻辑尚未明确", "操作影响尚不可追溯"],
     }
+
+
+def test_job_runner_processes_attachments_once(tmp_path) -> None:
+    project_id = "project-1"
+    stored_path = f"{project_id}/attachment-1-brief.md"
+    path = tmp_path / stored_path
+    path.parent.mkdir()
+    path.write_text("# Brief\n\n附件需求", encoding="utf-8")
+    state = ProjectState(project_id=project_id)
+    attachment = SimpleNamespace(
+        id="attachment-1",
+        project_id=project_id,
+        original_filename="brief.md",
+        stored_path=stored_path,
+        content_type="text/markdown",
+        size_bytes=12,
+        sha256="a" * 64,
+        kind="text",
+        status="pending",
+        extracted_text=None,
+        error_message=None,
+    )
+
+    class Repository:
+        def list_project_attachments(self, requested_project_id: str):
+            assert requested_project_id == project_id
+            return [attachment]
+
+        def update_project_attachment(
+            self,
+            attachment_id: str,
+            *,
+            status: str,
+            extracted_text: str | None,
+            error_message: str | None,
+        ):
+            assert attachment_id == "attachment-1"
+            attachment.status = status
+            attachment.extracted_text = extracted_text
+            attachment.error_message = error_message
+            return attachment
+
+        def get_project(self, requested_project_id: str) -> ProjectState:
+            assert requested_project_id == project_id
+            return state
+
+        def save_project(self, updated: ProjectState) -> None:
+            assert updated is state
+
+    runner = JobRunner(
+        Repository(),  # type: ignore[arg-type]
+        Settings(_env_file=None, upload_dir=tmp_path),
+    )
+
+    runner._process_project_attachments(project_id, object(), [attachment])
+    runner._process_project_attachments(project_id, object(), [attachment])
+
+    sources = state.requirement_spec.source_inputs
+    assert len(sources) == 1
+    assert sources[0].attachment_id == "attachment-1"
+    assert "附件需求" in sources[0].text

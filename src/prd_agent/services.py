@@ -2,10 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from prd_agent.attachments import (
+    extract_attachment_text,
+    format_attachment_source,
+)
 from prd_agent.agents import AgentFactory
 from prd_agent.flow import WorkflowEngine
 from prd_agent.gates import WorkflowGateError
-from prd_agent.models import JobType, Stage
+from prd_agent.models import JobType, SourceInput, Stage, StageStatus
 from prd_agent.repositories import (
     LlmConfigNotFoundError,
     LlmConfigRecord,
@@ -64,11 +68,13 @@ def workflow_for_config(
     repository: SQLAlchemyRepository,
     settings: Settings,
     config: LlmConfigRecord,
+    agent_factory: AgentFactory | None = None,
 ) -> WorkflowEngine:
     configured = settings_for_config(settings, config)
+    agents = agent_factory or AgentFactory(configured)
     return WorkflowEngine(
         repository=repository,
-        executor=CrewAITaskExecutor(AgentFactory(configured)),
+        executor=CrewAITaskExecutor(agents),
         max_prd_revision_rounds=settings.max_prd_revision_rounds,
         artifact_metadata={
             "llmProvider": config.provider,
@@ -101,7 +107,22 @@ class JobRunner:
         if not job.project_id:
             raise ValueError("工作流任务缺少projectId")
 
-        engine = workflow_for_config(self.repository, self.settings, config)
+        attachments = self.repository.list_project_attachments(job.project_id)
+        agent_factory = None
+        if attachments:
+            configured = settings_for_config(self.settings, config)
+            agent_factory = AgentFactory(configured)
+            self._process_project_attachments(
+                job.project_id,
+                agent_factory.llm,
+                attachments,
+            )
+        engine = workflow_for_config(
+            self.repository,
+            self.settings,
+            config,
+            agent_factory,
+        )
         operation = job.payload_json.get("operation")
         try:
             if operation == "advance":
@@ -143,6 +164,75 @@ class JobRunner:
             "stage": str(state.stage),
             "stageStatus": str(state.stage_status),
         }
+
+    def _process_project_attachments(
+        self,
+        project_id: str,
+        llm: Any,
+        attachments: list[Any],
+    ) -> None:
+        for attachment in attachments:
+            if attachment.status not in {"pending", "failed"}:
+                continue
+            try:
+                extracted_text = extract_attachment_text(
+                    attachment,
+                    self.settings.resolved_upload_dir,
+                    llm if attachment.kind == "image" else None,
+                )
+                self.repository.update_project_attachment(
+                    attachment.id,
+                    status="processed",
+                    extracted_text=extracted_text,
+                    error_message=None,
+                )
+            except Exception as exc:
+                self.repository.update_project_attachment(
+                    attachment.id,
+                    status="failed",
+                    extracted_text=None,
+                    error_message=str(exc),
+                )
+                state = self.repository.get_project(project_id)
+                state.stage_status = StageStatus.FAILED
+                self.repository.save_project(state)
+                raise ValueError(
+                    f"附件处理失败：{attachment.original_filename}：{exc}"
+                ) from exc
+
+        refreshed = self.repository.list_project_attachments(project_id)
+        processed = [
+            item
+            for item in refreshed
+            if item.status == "processed" and item.extracted_text
+        ]
+        if not processed:
+            return
+
+        state = self.repository.get_project(project_id)
+        existing_attachment_ids = {
+            source.attachment_id
+            for source in state.requirement_spec.source_inputs
+            if source.attachment_id
+        }
+        appended = False
+        for attachment in processed:
+            if attachment.id in existing_attachment_ids:
+                continue
+            state.requirement_spec.source_inputs.append(
+                SourceInput(
+                    text=format_attachment_source(
+                        attachment,
+                        attachment.extracted_text or "",
+                    ),
+                    source_type=attachment.kind,
+                    filename=attachment.original_filename,
+                    attachment_id=attachment.id,
+                )
+            )
+            appended = True
+        if appended:
+            self.repository.save_project(state)
 
     def _load_versioned_config(
         self,
