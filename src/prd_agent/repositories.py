@@ -455,6 +455,22 @@ class SQLAlchemyRepository:
             session.add(record)
         return record
 
+    def reset_admin_password(self, password_hash: str) -> bool:
+        """Replace the single administrator password and revoke all sessions."""
+
+        with self.sessions.begin() as session:
+            record = session.get(AdminUserRecord, 1)
+            if record is None:
+                return False
+            record.password_hash = password_hash
+            record.updated_at = utc_now()
+            session.execute(
+                delete(AdminSessionRecord).where(
+                    AdminSessionRecord.admin_user_id == record.id
+                )
+            )
+        return True
+
     def create_admin_session(
         self,
         token_hash: str,

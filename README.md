@@ -379,6 +379,24 @@ uv run prd-agent worker
 5. 填写数据库连接信息并保存
 6. 重启 API 和 Worker：按 Ctrl+C 后重新启动
 
+### 忘记管理员密码时重置
+
+系统采用单管理员模式。请在项目根目录执行交互式重置命令：
+
+```bash
+uv run prd-agent reset-admin-password
+```
+
+根据提示输入并确认新密码（长度为 8 至 128 个字符）。输入内容不会显示，也不会写入 Shell 命令历史。重置成功后，所有已登录会话都会失效，需要使用新密码重新登录。
+
+如果使用 Docker Compose，请执行：
+
+```bash
+docker compose exec api uv run prd-agent reset-admin-password
+```
+
+该命令要求数据库连接可用且已经创建管理员。如果系统尚未创建管理员，请直接打开登录页完成首次管理员创建，无需执行重置。
+
 ---
 
 ## CrewAI 工作流详解
@@ -1003,6 +1021,9 @@ prd-agent export proj-abc123 --artifact prd --output my-prd.md
 ```bash
 # 升级数据库到最新版本
 prd-agent db-upgrade
+
+# 交互式重置管理员密码，并注销所有现有会话
+prd-agent reset-admin-password
 
 # 查看迁移状态
 prd-agent db-status

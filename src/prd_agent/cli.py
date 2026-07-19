@@ -7,6 +7,7 @@ import typer
 import uvicorn
 from alembic import command
 from alembic.config import Config
+from pwdlib import PasswordHash
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -163,6 +164,28 @@ def database_upgrade() -> None:
     )
     command.upgrade(config, "head")
     console.print("[green]数据库迁移完成。[/green]")
+
+
+@app.command("reset-admin-password")
+def reset_admin_password() -> None:
+    """交互式重置管理员密码，并注销所有现有会话。"""
+
+    password = typer.prompt(
+        "请输入新密码",
+        hide_input=True,
+        confirmation_prompt="请再次输入新密码",
+    )
+    if not 8 <= len(password) <= 128:
+        console.print("[red]错误：[/red]密码长度必须为 8 至 128 个字符。")
+        raise typer.Exit(code=1)
+
+    repository = _run(lambda: _repository(get_settings()))
+    password_hash = PasswordHash.recommended().hash(password)
+    updated = _run(lambda: repository.reset_admin_password(password_hash))
+    if not updated:
+        console.print("[red]错误：[/red]尚未创建管理员，请先在登录页创建管理员。")
+        raise typer.Exit(code=1)
+    console.print("[green]管理员密码已重置，所有现有登录会话已失效。[/green]")
 
 
 @app.command("api")
