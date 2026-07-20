@@ -13,6 +13,8 @@ PRODUCTION_URL = (
 TEST_URL = (
     "mysql+pymysql://user:password@localhost:3306/prd_agent_test?charset=utf8mb4"
 )
+SQLITE_URL = "sqlite+pysqlite:///./data/prd_agent.db"
+SQLITE_TEST_URL = "sqlite+pysqlite:///./data/prd_agent_test.db"
 
 
 @pytest.fixture(autouse=True)
@@ -36,6 +38,16 @@ def test_settings_accept_separate_mysql_databases() -> None:
     )
     assert settings.database_url == PRODUCTION_URL
     assert settings.test_database_url == TEST_URL
+
+
+def test_settings_accept_separate_sqlite_databases() -> None:
+    settings = Settings(
+        _env_file=None,
+        database_url=SQLITE_URL,
+        test_database_url=SQLITE_TEST_URL,
+    )
+    assert settings.database_url == SQLITE_URL
+    assert settings.test_database_url == SQLITE_TEST_URL
 
 
 def test_settings_allow_missing_database_for_setup_mode(
@@ -145,7 +157,9 @@ def test_settings_accept_blank_native_structured_output_flag() -> None:
 @pytest.mark.parametrize(
     ("database_url", "test_database_url", "message"),
     [
-        ("sqlite://", TEST_URL, "mysql\\+pymysql"),
+        ("postgresql://localhost/prd_agent", TEST_URL, "SQLite 或 mysql"),
+        (SQLITE_URL, TEST_URL, "相同数据库类型"),
+        (SQLITE_URL, SQLITE_URL, "_test"),
         (PRODUCTION_URL, PRODUCTION_URL, "_test"),
         (
             "mysql+pymysql://user:password@localhost:3306/shared_test?charset=utf8mb4",
@@ -172,6 +186,24 @@ def test_settings_reject_invalid_database_configuration(
         )
 
 
-def test_repository_rejects_non_mysql_engine() -> None:
-    with pytest.raises(ValueError, match="仅支持MySQL"):
-        SQLAlchemyRepository(create_engine("sqlite://"))
+def test_repository_accepts_sqlite_engine() -> None:
+    repository = SQLAlchemyRepository(create_engine("sqlite+pysqlite:///:memory:"))
+    assert repository.engine.dialect.name == "sqlite"
+
+
+def test_repository_selects_engine_from_database_url() -> None:
+    sqlite_repository = SQLAlchemyRepository.from_url(SQLITE_URL)
+    mysql_repository = SQLAlchemyRepository.from_url(PRODUCTION_URL)
+
+    assert sqlite_repository.engine.dialect.name == "sqlite"
+    assert mysql_repository.engine.dialect.name == "mysql"
+
+    sqlite_repository.engine.dispose()
+    mysql_repository.engine.dispose()
+
+
+def test_repository_rejects_unsupported_engine() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    engine.dialect.name = "postgresql"
+    with pytest.raises(ValueError, match="仅支持SQLite或MySQL"):
+        SQLAlchemyRepository(engine)

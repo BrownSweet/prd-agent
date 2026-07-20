@@ -22,6 +22,9 @@ TABLE_OPTIONS = {
     "mysql_collate": "utf8mb4_0900_ai_ci",
 }
 
+JSON = sa.JSON().with_variant(mysql.JSON(), "mysql")
+LONG_TEXT = sa.Text().with_variant(mysql.LONGTEXT(), "mysql")
+
 
 def upgrade() -> None:
     op.create_table(
@@ -29,7 +32,7 @@ def upgrade() -> None:
         sa.Column("id", sa.String(length=36), nullable=False),
         sa.Column("stage", sa.String(length=40), nullable=False),
         sa.Column("stage_status", sa.String(length=30), nullable=False),
-        sa.Column("state_json", mysql.JSON(), nullable=False),
+        sa.Column("state_json", JSON, nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
@@ -44,7 +47,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("project_id", sa.String(length=36), nullable=False),
         sa.Column("version", sa.Integer(), nullable=False),
-        sa.Column("requirement_json", mysql.JSON(), nullable=False),
+        sa.Column("requirement_json", JSON, nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
@@ -108,8 +111,8 @@ def upgrade() -> None:
         sa.Column("project_id", sa.String(length=36), nullable=False),
         sa.Column("artifact_type", sa.String(length=30), nullable=False),
         sa.Column("version", sa.Integer(), nullable=False),
-        sa.Column("content", mysql.LONGTEXT(), nullable=False),
-        sa.Column("metadata_json", mysql.JSON(), nullable=False),
+        sa.Column("content", LONG_TEXT, nullable=False),
+        sa.Column("metadata_json", JSON, nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
@@ -145,7 +148,7 @@ def upgrade() -> None:
         sa.Column("event_type", sa.String(length=80), nullable=False),
         sa.Column("stage", sa.String(length=40), nullable=False),
         sa.Column("message", sa.Text(), nullable=False),
-        sa.Column("details_json", mysql.JSON(), nullable=False),
+        sa.Column("details_json", JSON, nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["project_id"], ["projects.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),

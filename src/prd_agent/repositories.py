@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 from enum import Enum
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -11,16 +12,18 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    JSON,
     String,
     Text,
     UniqueConstraint,
     create_engine,
     delete,
+    event,
     func,
     select,
     update,
 )
-from sqlalchemy.dialects.mysql import JSON, LONGTEXT
+from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import (
@@ -30,6 +33,7 @@ from sqlalchemy.orm import (
     mapped_column,
     sessionmaker,
 )
+from sqlalchemy.pool import StaticPool
 from sqlalchemy.types import TypeDecorator
 
 from prd_agent.models import (
@@ -48,7 +52,7 @@ class Base(DeclarativeBase):
 
 
 class UTCDateTime(TypeDecorator[datetime]):
-    """Persist UTC as MySQL DATETIME and restore timezone information on read."""
+    """Persist UTC without an offset and restore timezone information on read."""
 
     impl = DateTime
     cache_ok = True
@@ -79,6 +83,8 @@ MYSQL_TABLE_OPTIONS = {
     "mysql_charset": "utf8mb4",
     "mysql_collate": "utf8mb4_0900_ai_ci",
 }
+
+LONG_TEXT = Text().with_variant(LONGTEXT(), "mysql")
 
 
 def _json_ready(value: Any) -> Any:
@@ -139,7 +145,7 @@ class ProjectAttachmentRecord(Base):
     status: Mapped[str] = mapped_column(
         String(30), nullable=False, default="pending", index=True
     )
-    extracted_text: Mapped[str | None] = mapped_column(LONGTEXT)
+    extracted_text: Mapped[str | None] = mapped_column(LONG_TEXT)
     error_message: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
@@ -224,7 +230,7 @@ class ArtifactRecord(Base):
         String(30), nullable=False, index=True
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False)
-    content: Mapped[str] = mapped_column(LONGTEXT, nullable=False)
+    content: Mapped[str] = mapped_column(LONG_TEXT, nullable=False)
     metadata_json: Mapped[dict[str, Any]] = mapped_column(
         JSON, nullable=False, default=dict
     )
@@ -275,7 +281,7 @@ class LlmConfigRecord(Base):
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     provider: Mapped[str] = mapped_column(String(80), nullable=False)
     model: Mapped[str] = mapped_column(String(255), nullable=False)
-    api_key: Mapped[str | None] = mapped_column(LONGTEXT)
+    api_key: Mapped[str | None] = mapped_column(LONG_TEXT)
     base_url: Mapped[str | None] = mapped_column(String(500))
     temperature: Mapped[float] = mapped_column(Float, nullable=False)
     timeout_seconds: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -383,10 +389,17 @@ class AdminAlreadyConfiguredError(RuntimeError):
 
 
 class SQLAlchemyRepository:
-    def __init__(self, engine: Engine):
-        if engine.dialect.name != "mysql" or engine.dialect.driver != "pymysql":
-            raise ValueError("Repository仅支持MySQL 8.0+和PyMySQL驱动")
+    def __init__(self, engine: Engine, sqlite_busy_timeout_seconds: int = 30):
+        supported = (
+            engine.dialect.name == "mysql" and engine.dialect.driver == "pymysql"
+        ) or (
+            engine.dialect.name == "sqlite" and engine.dialect.driver == "pysqlite"
+        )
+        if not supported:
+            raise ValueError("Repository仅支持SQLite或MySQL 8.0+（PyMySQL）")
         self.engine = engine
+        if engine.dialect.name == "sqlite":
+            self._configure_sqlite(engine, sqlite_busy_timeout_seconds)
         self.sessions = sessionmaker(
             bind=engine,
             class_=Session,
@@ -401,14 +414,13 @@ class SQLAlchemyRepository:
         read_timeout: int = 30,
     ) -> SQLAlchemyRepository:
         url = make_url(database_url)
-        if url.get_backend_name() != "mysql":
-            raise ValueError("仅支持MySQL数据库")
-        if url.drivername != "mysql+pymysql":
-            raise ValueError("MySQL连接必须使用PyMySQL驱动")
-        if url.query.get("charset") != "utf8mb4":
-            raise ValueError("MySQL连接必须包含 charset=utf8mb4")
-        return cls(
-            create_engine(
+        backend = url.get_backend_name()
+        if backend == "mysql":
+            if url.drivername != "mysql+pymysql":
+                raise ValueError("MySQL连接必须使用PyMySQL驱动")
+            if url.query.get("charset") != "utf8mb4":
+                raise ValueError("MySQL连接必须包含 charset=utf8mb4")
+            engine = create_engine(
                 database_url,
                 pool_pre_ping=True,
                 pool_recycle=1800,
@@ -418,7 +430,46 @@ class SQLAlchemyRepository:
                     "write_timeout": read_timeout,
                 },
             )
-        )
+        elif backend == "sqlite":
+            if url.drivername not in {"sqlite", "sqlite+pysqlite"}:
+                raise ValueError("SQLite连接必须使用sqlite或sqlite+pysqlite驱动")
+            if not url.database:
+                raise ValueError("SQLite连接必须指定数据库文件路径")
+            if url.database != ":memory:":
+                Path(url.database).expanduser().resolve().parent.mkdir(
+                    parents=True,
+                    exist_ok=True,
+                )
+            engine_options: dict[str, Any] = {
+                "pool_pre_ping": True,
+                "connect_args": {
+                    "check_same_thread": False,
+                    "timeout": read_timeout,
+                },
+            }
+            if url.database == ":memory:":
+                engine_options["poolclass"] = StaticPool
+            engine = create_engine(database_url, **engine_options)
+        else:
+            raise ValueError("数据库仅支持SQLite或MySQL")
+        return cls(engine, sqlite_busy_timeout_seconds=read_timeout)
+
+    @staticmethod
+    def _configure_sqlite(engine: Engine, busy_timeout_seconds: int) -> None:
+        if getattr(engine, "_prd_agent_sqlite_configured", False):
+            return
+
+        @event.listens_for(engine, "connect")
+        def set_sqlite_pragmas(dbapi_connection: Any, _: Any) -> None:
+            cursor = dbapi_connection.cursor()
+            try:
+                cursor.execute("PRAGMA foreign_keys=ON")
+                cursor.execute(f"PRAGMA busy_timeout={busy_timeout_seconds * 1000}")
+                cursor.execute("PRAGMA journal_mode=WAL")
+            finally:
+                cursor.close()
+
+        setattr(engine, "_prd_agent_sqlite_configured", True)
 
     def get_admin_user(self) -> AdminUserRecord | None:
         with self.sessions() as session:
@@ -785,8 +836,8 @@ class SQLAlchemyRepository:
                 created_at=created_at,
             )
 
-    @staticmethod
-    def _lock_project(session: Session, project_id: str) -> ProjectRecord:
+    def _lock_project(self, session: Session, project_id: str) -> ProjectRecord:
+        self._begin_sqlite_write(session)
         record = session.scalar(
             select(ProjectRecord)
             .where(ProjectRecord.id == project_id)
@@ -795,6 +846,10 @@ class SQLAlchemyRepository:
         if not record:
             raise ProjectNotFoundError(f"项目不存在：{project_id}")
         return record
+
+    def _begin_sqlite_write(self, session: Session) -> None:
+        if self.engine.dialect.name == "sqlite":
+            session.connection().exec_driver_sql("BEGIN IMMEDIATE")
 
     def get_latest_artifact(
         self, project_id: str, artifact_type: ArtifactType
@@ -1105,6 +1160,7 @@ class SQLAlchemyRepository:
 
     def claim_next_job(self) -> WorkflowJobRecord | None:
         with self.sessions.begin() as session:
+            self._begin_sqlite_write(session)
             record = session.scalar(
                 select(WorkflowJobRecord)
                 .where(WorkflowJobRecord.status == str(JobStatus.QUEUED))

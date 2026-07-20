@@ -22,6 +22,8 @@ TABLE_OPTIONS = {
     "mysql_collate": "utf8mb4_0900_ai_ci",
 }
 
+LONG_TEXT = sa.Text().with_variant(mysql.LONGTEXT(), "mysql")
+
 
 def upgrade() -> None:
     op.create_table(
@@ -35,7 +37,7 @@ def upgrade() -> None:
         sa.Column("sha256", sa.String(length=64), nullable=False),
         sa.Column("kind", sa.String(length=40), nullable=False),
         sa.Column("status", sa.String(length=30), nullable=False),
-        sa.Column("extracted_text", mysql.LONGTEXT(), nullable=True),
+        sa.Column("extracted_text", LONG_TEXT, nullable=True),
         sa.Column("error_message", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),

@@ -114,13 +114,13 @@ class Settings(BaseSettings):
 
     @field_validator("database_url", "test_database_url")
     @classmethod
-    def require_mysql_url(cls, value: str | None) -> str | None:
+    def require_supported_database_url(cls, value: str | None) -> str | None:
         if value is None:
             return None
         normalized = value.strip()
         if not normalized:
             return None
-        validate_mysql_url(normalized)
+        validate_database_url(normalized)
         return normalized
 
     @field_validator("test_database_url")
@@ -149,25 +149,57 @@ def validate_mysql_url(value: str) -> str:
     return value
 
 
+def validate_sqlite_url(value: str) -> str:
+    url = make_url(value)
+    if url.get_backend_name() != "sqlite" or url.drivername not in {
+        "sqlite",
+        "sqlite+pysqlite",
+    }:
+        raise ValueError("SQLite连接必须使用 sqlite 或 sqlite+pysqlite")
+    if not url.database:
+        raise ValueError("SQLite连接必须指定数据库文件路径")
+    return value
+
+
+def validate_database_url(value: str) -> str:
+    backend = make_url(value).get_backend_name()
+    if backend == "mysql":
+        return validate_mysql_url(value)
+    if backend == "sqlite":
+        return validate_sqlite_url(value)
+    raise ValueError("数据库仅支持 SQLite 或 mysql+pymysql")
+
+
 def validate_test_database_url(value: str) -> str:
-    validate_mysql_url(value)
-    database = make_url(value).database or ""
-    if not database.endswith("_test"):
-        raise ValueError("测试数据库名称必须以 _test 结尾")
+    validate_database_url(value)
+    url = make_url(value)
+    database = url.database or ""
+    if url.get_backend_name() == "mysql" and not database.endswith("_test"):
+        raise ValueError("MySQL测试数据库名称必须以 _test 结尾")
+    if url.get_backend_name() == "sqlite":
+        filename = Path(database).name
+        if filename != ":memory:" and not Path(filename).stem.endswith("_test"):
+            raise ValueError("SQLite测试数据库文件名必须以 _test 结尾")
     return value
 
 
 def validate_database_pair(database_url: str, test_database_url: str) -> None:
-    validate_mysql_url(database_url)
+    validate_database_url(database_url)
     validate_test_database_url(test_database_url)
     production = make_url(database_url)
     test = make_url(test_database_url)
-    production_target = (
-        production.host,
-        production.port or 3306,
-        production.database,
-    )
-    test_target = (test.host, test.port or 3306, test.database)
+    if production.get_backend_name() != test.get_backend_name():
+        raise ValueError("DATABASE_URL 与 TEST_DATABASE_URL 必须使用相同数据库类型")
+    if production.get_backend_name() == "mysql":
+        production_target = (
+            production.host,
+            production.port or 3306,
+            production.database,
+        )
+        test_target = (test.host, test.port or 3306, test.database)
+    else:
+        production_target = (Path(production.database or "").resolve(),)
+        test_target = (Path(test.database or "").resolve(),)
     if production_target == test_target:
         raise ValueError("DATABASE_URL 与 TEST_DATABASE_URL 必须使用不同数据库")
 

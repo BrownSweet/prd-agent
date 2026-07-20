@@ -294,31 +294,43 @@ class FakeTaskExecutor:
 
 
 @pytest.fixture(scope="session")
-def test_database_url() -> str:
+def test_database_url(tmp_path_factory: pytest.TempPathFactory) -> str:
     value = os.getenv("TEST_DATABASE_URL")
     if not value:
-        pytest.fail(
-            "数据库测试需要 TEST_DATABASE_URL，例如 "
-            "mysql+pymysql://USER:PASSWORD@HOST:3306/prd_agent_test?charset=utf8mb4"
-        )
+        database_path = tmp_path_factory.mktemp("database") / "prd_agent_test.db"
+        value = f"sqlite+pysqlite:///{database_path}"
 
     url = make_url(value)
-    if url.get_backend_name() != "mysql" or url.drivername != "mysql+pymysql":
-        pytest.fail("TEST_DATABASE_URL 必须使用 mysql+pymysql")
-    if not (url.database or "").endswith("_test"):
-        pytest.fail("测试数据库名称必须以 _test 结尾")
-    if url.query.get("charset") != "utf8mb4":
-        pytest.fail("TEST_DATABASE_URL 必须包含 charset=utf8mb4")
+    if url.get_backend_name() == "mysql":
+        if url.drivername != "mysql+pymysql":
+            pytest.fail("MySQL TEST_DATABASE_URL 必须使用 mysql+pymysql")
+        if not (url.database or "").endswith("_test"):
+            pytest.fail("MySQL测试数据库名称必须以 _test 结尾")
+        if url.query.get("charset") != "utf8mb4":
+            pytest.fail("MySQL TEST_DATABASE_URL 必须包含 charset=utf8mb4")
+    elif url.get_backend_name() == "sqlite":
+        if url.drivername not in {"sqlite", "sqlite+pysqlite"}:
+            pytest.fail("SQLite TEST_DATABASE_URL 必须使用 sqlite+pysqlite")
+    else:
+        pytest.fail("TEST_DATABASE_URL 仅支持 SQLite 或 MySQL")
 
     production = os.getenv("DATABASE_URL")
     if production:
         production_url = make_url(production)
-        production_target = (
-            production_url.host,
-            production_url.port or 3306,
-            production_url.database,
-        )
-        test_target = (url.host, url.port or 3306, url.database)
+        if production_url.get_backend_name() != url.get_backend_name():
+            pytest.fail(
+                "DATABASE_URL 与 TEST_DATABASE_URL 必须使用相同数据库类型"
+            )
+        if url.get_backend_name() == "mysql":
+            production_target = (
+                production_url.host,
+                production_url.port or 3306,
+                production_url.database,
+            )
+            test_target = (url.host, url.port or 3306, url.database)
+        else:
+            production_target = (Path(production_url.database or "").resolve(),)
+            test_target = (Path(url.database or "").resolve(),)
         if production_target == test_target:
             pytest.fail("DATABASE_URL 与 TEST_DATABASE_URL 不能指向同一数据库")
     return value
@@ -336,13 +348,14 @@ def migrated_database(test_database_url: str) -> str:
     command.upgrade(config, "head")
 
     repository = SQLAlchemyRepository.from_url(test_database_url)
-    with repository.engine.connect() as connection:
-        version = str(connection.scalar(text("SELECT VERSION()")))
-        if "mariadb" in version.casefold():
-            pytest.fail(f"测试数据库必须是MySQL 8.0+，不支持MariaDB：{version}")
-        major = int(version.split(".", maxsplit=1)[0])
-        if major < 8:
-            pytest.fail(f"测试数据库必须是MySQL 8.0+，当前版本：{version}")
+    if repository.engine.dialect.name == "mysql":
+        with repository.engine.connect() as connection:
+            version = str(connection.scalar(text("SELECT VERSION()")))
+            if "mariadb" in version.casefold():
+                pytest.fail(f"测试数据库必须是MySQL 8.0+，不支持MariaDB：{version}")
+            major = int(version.split(".", maxsplit=1)[0])
+            if major < 8:
+                pytest.fail(f"测试数据库必须是MySQL 8.0+，当前版本：{version}")
 
     yield test_database_url
     command.downgrade(config, "base")
@@ -350,12 +363,17 @@ def migrated_database(test_database_url: str) -> str:
 
 def clean_database(repository: SQLAlchemyRepository) -> None:
     with repository.engine.begin() as connection:
-        connection.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
+        if repository.engine.dialect.name == "mysql":
+            connection.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
         try:
             for table in TABLES:
-                connection.execute(text(f"TRUNCATE TABLE `{table}`"))
+                if repository.engine.dialect.name == "mysql":
+                    connection.execute(text(f"TRUNCATE TABLE `{table}`"))
+                else:
+                    connection.execute(text(f'DELETE FROM "{table}"'))
         finally:
-            connection.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
+            if repository.engine.dialect.name == "mysql":
+                connection.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
 
 
 @pytest.fixture

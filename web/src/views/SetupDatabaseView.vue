@@ -30,6 +30,11 @@ const canSubmit = computed(
   () => form.databaseUrl.trim() && form.testDatabaseUrl.trim(),
 )
 
+function useSqlite() {
+  form.databaseUrl = 'sqlite+pysqlite:///./data/prd_agent.db'
+  form.testDatabaseUrl = 'sqlite+pysqlite:///./data/prd_agent_test.db'
+}
+
 const testMutation = useMutation({
   mutationFn: () =>
     api.testDatabaseSetup(
@@ -60,7 +65,7 @@ const saveMutation = useMutation({
   <div class="page-header">
     <div>
       <h1>系统配置</h1>
-      <p>配置本地 MySQL 连接。保存后需要重启 API 和 Worker 才会生效。</p>
+      <p>配置 SQLite 或 MySQL，系统会根据连接 URL 自动选择数据库驱动。</p>
     </div>
   </div>
 
@@ -91,8 +96,8 @@ const saveMutation = useMutation({
       </el-alert>
 
       <el-alert
-        title=".env 会明文保存数据库密码"
-        description="这是本机单用户 MVP 的启动配置。保存后不会热切换数据库，请停止 API，执行 uv run prd-agent db-upgrade，再重新启动 API 和 Worker。"
+        title="数据库类型由 URL 自动识别"
+        description="SQLite 适合本地单机使用，MySQL 适合部署环境。切换不会自动搬迁数据；保存后请执行 uv run prd-agent db-upgrade，再重启 API 和 Worker。MySQL 密码会明文保存在 .env。"
         type="info"
         show-icon
         :closable="false"
@@ -100,17 +105,20 @@ const saveMutation = useMutation({
       />
 
       <el-form label-position="top" class="setup-form">
+        <el-button class="sqlite-preset" @click="useSqlite">
+          使用本地 SQLite
+        </el-button>
         <el-form-item label="DATABASE_URL">
           <el-input
             v-model="form.databaseUrl"
-            placeholder="mysql+pymysql://USER:PASSWORD@HOST:3306/prd_agent?charset=utf8mb4"
+            placeholder="sqlite+pysqlite:///./data/prd_agent.db 或 mysql+pymysql://..."
             clearable
           />
         </el-form-item>
         <el-form-item label="TEST_DATABASE_URL">
           <el-input
             v-model="form.testDatabaseUrl"
-            placeholder="mysql+pymysql://USER:PASSWORD@HOST:3306/prd_agent_test?charset=utf8mb4"
+            placeholder="sqlite+pysqlite:///./data/prd_agent_test.db 或 mysql+pymysql://..."
             clearable
           />
         </el-form-item>
@@ -163,6 +171,10 @@ const saveMutation = useMutation({
 
 .setup-form {
   margin-top: 18px;
+}
+
+.sqlite-preset {
+  margin-bottom: 16px;
 }
 
 .setup-actions {

@@ -137,7 +137,7 @@ def test_api_enters_setup_mode_without_database_configuration() -> None:
         assert projects.json()["code"] == "setup_required"
 
 
-def test_setup_database_test_rejects_invalid_mysql_url() -> None:
+def test_setup_database_test_rejects_mixed_database_types() -> None:
     app = create_app(
         Settings(_env_file=None, database_url=None, test_database_url=None)
     )
@@ -146,13 +146,33 @@ def test_setup_database_test_rejects_invalid_mysql_url() -> None:
         response = client.post(
             "/api/v1/setup/database/test",
             json={
-                "databaseUrl": "sqlite://",
+                "databaseUrl": "sqlite+pysqlite:///./data/prd_agent.db",
                 "testDatabaseUrl": TEST_URL,
             },
         )
 
         assert response.status_code == 400
-        assert "mysql+pymysql" in response.json()["message"]
+        assert "相同数据库类型" in response.json()["message"]
+
+
+def test_setup_database_test_accepts_sqlite_urls(tmp_path) -> None:
+    app = create_app(
+        Settings(_env_file=None, database_url=None, test_database_url=None)
+    )
+    database_url = f"sqlite+pysqlite:///{tmp_path / 'prd_agent.db'}"
+    test_database_url = f"sqlite+pysqlite:///{tmp_path / 'prd_agent_test.db'}"
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/setup/database/test",
+            json={
+                "databaseUrl": database_url,
+                "testDatabaseUrl": test_database_url,
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["ok"] is True
 
 
 def test_setup_database_save_preserves_env_and_upserts_database_urls(

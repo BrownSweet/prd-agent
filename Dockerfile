@@ -1,119 +1,64 @@
-# =====================================================
-# 多阶段构建：Node 前端 + Python 后端
-# =====================================================
+# syntax=docker/dockerfile:1
 
-# ============================================
-# 阶段 1: 构建 Vue 前端
-# ============================================
 FROM node:22.12-alpine AS frontend-builder
 
-WORKDIR /app/web
-
-# 复制前端代码
+WORKDIR /build/web
+RUN npm install -g pnpm@9.15.9
 COPY web/package.json web/pnpm-lock.yaml ./
-
-# 安装 pnpm 和依赖
-RUN npm install -g pnpm && \
-    pnpm install --frozen-lockfile
-
-# 复制源代码
-COPY web/src ./src
-COPY web/index.html ./
-COPY web/tsconfig* ./
-COPY web/vite.config.ts ./
-
-# 构建前端
+RUN pnpm install --frozen-lockfile
+COPY web/ ./
 RUN pnpm build
 
-# ============================================
-# 阶段 2: Python 运行环境
-# ============================================
-FROM python:3.12-slim AS runtime
 
+FROM python:3.12-slim AS backend-builder
+
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1
 WORKDIR /app
-
-# 安装系统依赖
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    mysql-client \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# ============================================
-# 阶段 3: Python 开发环境（可选，用于开发）
-# ============================================
-FROM runtime AS development
-
-# 安装 uv
-RUN pip install uv --no-cache-dir
-
-WORKDIR /app
-
-# 复制依赖文件
+RUN pip install --no-cache-dir uv
 COPY pyproject.toml uv.lock ./
+COPY src/ ./src/
+RUN uv sync --frozen --no-dev --no-editable
 
-# 安装所有依赖（包括开发依赖）
-RUN uv sync --extra dev
 
-# 复制源代码
-COPY src ./src
-COPY alembic ./alembic
-COPY alembic.ini .
+FROM python:3.12-slim AS production
 
-# 暴露端口
-EXPOSE 8000 5173
-
-# 健康检查
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
-CMD ["/bin/bash"]
-
-# ============================================
-# 阶段 4: Python 生产环境
-# ============================================
-FROM runtime AS production
-
-# 安装 uv
-RUN pip install uv --no-cache-dir
+ENV PATH="/app/.venv/bin:${PATH}" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    API_HOST=127.0.0.1 \
+    API_PORT=8000 \
+    PROJECT_ROOT=/app \
+    DATABASE_URL=sqlite+pysqlite:////app/data/prd_agent.db \
+    TEST_DATABASE_URL=sqlite+pysqlite:////app/data/prd_agent_test.db \
+    UPLOAD_DIR=/app/uploads \
+    CREWAI_DISABLE_TELEMETRY=true \
+    CREWAI_TRACING_ENABLED=false
 
 WORKDIR /app
 
-# 复制依赖文件
-COPY pyproject.toml uv.lock ./
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl nginx \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 1000 prd \
+    && mkdir -p /app/data /app/uploads /tmp/nginx \
+    && chown -R prd:prd /app /tmp/nginx
 
-# 安装生产依赖（不包括开发依赖）
-RUN uv sync --no-dev && \
-    rm -rf /root/.cache
+COPY --from=backend-builder --chown=prd:prd /app/.venv /app/.venv
+COPY --chown=prd:prd alembic/ /app/alembic/
+COPY --chown=prd:prd alembic.ini /app/alembic.ini
+COPY --from=frontend-builder --chown=prd:prd /build/web/dist /app/web/dist
+COPY docker/nginx.deploy.conf /etc/nginx/nginx.conf
+COPY docker/entrypoint.sh /usr/local/bin/prd-agent-entrypoint
 
-# 复制源代码
-COPY src ./src
-COPY alembic ./alembic
-COPY alembic.ini .
-
-# 从前端构建阶段复制静态文件
-COPY --from=frontend-builder /app/web/dist ./web/dist
-
-# 创建非 root 用户运行应用
-RUN mkdir -p /app/uploads && \
-    useradd -m -u 1000 prd && \
-    chown -R prd:prd /app
+RUN chmod +x /usr/local/bin/prd-agent-entrypoint
 
 USER prd
 
-# 暴露端口
-EXPOSE 8000
+EXPOSE 8080
+VOLUME ["/app/data", "/app/uploads"]
 
-# 健康检查
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+HEALTHCHECK --interval=15s --timeout=5s --start-period=45s --retries=5 \
+    CMD curl --fail --silent http://127.0.0.1:8080/health >/dev/null || exit 1
 
-# 入口点
-ENTRYPOINT ["uv", "run"]
-CMD ["prd-agent", "api"]
-
-# ============================================
-# 元数据
-# ============================================
-LABEL maintainer="PRD Agent Team"
-LABEL description="CrewAI-based requirement workbench"
-LABEL version="0.1.0"
+ENTRYPOINT ["/usr/local/bin/prd-agent-entrypoint"]

@@ -1,207 +1,41 @@
-# =====================================================
-# Docker Compose 开发配置
-# =====================================================
-# 使用: docker-compose up
-#
-# 服务：
-# - mysql: MySQL 8.0 数据库
-# - api: FastAPI 后端 (localhost:8000)
-# - worker: 异步任务工作线程
-# - frontend: Vue 开发服务器 (localhost:5173)
-#
-# =====================================================
-
-version: '3.8'
-
 services:
-  # ============================================
-  # MySQL 数据库
-  # ============================================
-  mysql:
-    image: mysql:8.0
-    container_name: prd-agent-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: prd_agent
-      MYSQL_USER: prd_user
-      MYSQL_PASSWORD: prd_password
-      TZ: UTC
-    ports:
-      - "3306:3306"
-    volumes:
-      # 数据持久化
-      - mysql_data:/var/lib/mysql
-      # 初始化脚本
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
-    command: >
-      --character-set-server=utf8mb4
-      --collation-server=utf8mb4_0900_ai_ci
-      --default-authentication-plugin=mysql_native_password
-      --max_allowed_packet=256M
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - prd-network
-
-  # ============================================
-  # FastAPI 后端
-  # ============================================
-  api:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-      target: development
-    container_name: prd-agent-api
-    working_dir: /app
+    image: prd-agent:latest
+    container_name: prd-agent
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${APP_PORT:-8080}:8080"
     environment:
-      # LLM 配置
-      LLM_MODEL: ${LLM_MODEL:-deepseek/deepseek-chat}
-      LLM_API_KEY: ${LLM_API_KEY:-}
-      LLM_BASE_URL: ${LLM_BASE_URL:-}
-      LLM_PROVIDER: ${LLM_PROVIDER:-deepseek}
-      LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.2}
-      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-120}
-
-      # 数据库配置
-      DATABASE_URL: mysql+pymysql://prd_user:prd_password@mysql:3306/prd_agent?charset=utf8mb4
-      TEST_DATABASE_URL: mysql+pymysql://prd_user:prd_password@mysql:3306/prd_agent_test?charset=utf8mb4
-
-      # API 配置
-      API_HOST: 0.0.0.0
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-sqlite+pysqlite:////app/data/prd_agent.db}
+      TEST_DATABASE_URL: ${DOCKER_TEST_DATABASE_URL:-sqlite+pysqlite:////app/data/prd_agent_test.db}
+      API_HOST: 127.0.0.1
       API_PORT: 8000
+      PROJECT_ROOT: /app
       UPLOAD_DIR: /app/uploads
-
-      # 工作流配置
-      MAX_PRD_REVISION_ROUNDS: ${MAX_PRD_REVISION_ROUNDS:-3}
-
-      # CrewAI 配置
-      CREWAI_DISABLE_TELEMETRY: "true"
-      CREWAI_TRACING_ENABLED: "false"
-
-      # Python 日志
-      PYTHONUNBUFFERED: "1"
-
-    ports:
-      - "8000:8000"
-    volumes:
-      # 源代码挂载（支持热重加载）
-      - ./src:/app/src
-      - ./alembic:/app/alembic
-      - uploads_data:/app/uploads
-    depends_on:
-      mysql:
-        condition: service_healthy
-    command: >
-      sh -c "uv run prd-agent db-upgrade &&
-             uv run prd-agent api --host 0.0.0.0 --reload"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      - prd-network
-
-  # ============================================
-  # 异步任务 Worker
-  # ============================================
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: development
-    container_name: prd-agent-worker
-    working_dir: /app
-    environment:
-      # LLM 配置（与 API 相同）
-      LLM_MODEL: ${LLM_MODEL:-deepseek/deepseek-chat}
+      LLM_MODEL: ${LLM_MODEL:-}
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_BASE_URL: ${LLM_BASE_URL:-}
-      LLM_PROVIDER: ${LLM_PROVIDER:-deepseek}
+      LLM_PROVIDER: ${LLM_PROVIDER:-}
       LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.2}
       LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-120}
-
-      # 数据库配置
-      DATABASE_URL: mysql+pymysql://prd_user:prd_password@mysql:3306/prd_agent?charset=utf8mb4
-      TEST_DATABASE_URL: mysql+pymysql://prd_user:prd_password@mysql:3306/prd_agent_test?charset=utf8mb4
-
-      # Worker 配置
+      LLM_NATIVE_STRUCTURED_OUTPUT: ${LLM_NATIVE_STRUCTURED_OUTPUT:-}
       WORKER_POLL_SECONDS: ${WORKER_POLL_SECONDS:-1}
-      UPLOAD_DIR: /app/uploads
-
-      # CrewAI 配置
+      DATABASE_CONNECT_TIMEOUT_SECONDS: ${DATABASE_CONNECT_TIMEOUT_SECONDS:-5}
+      DATABASE_READ_TIMEOUT_SECONDS: ${DATABASE_READ_TIMEOUT_SECONDS:-30}
+      MAX_PRD_REVISION_ROUNDS: ${MAX_PRD_REVISION_ROUNDS:-3}
+      UPLOAD_MAX_BYTES: ${UPLOAD_MAX_BYTES:-20971520}
+      UPLOAD_MAX_FILES_PER_PROJECT: ${UPLOAD_MAX_FILES_PER_PROJECT:-8}
       CREWAI_DISABLE_TELEMETRY: "true"
       CREWAI_TRACING_ENABLED: "false"
-
-      # Python 日志
-      PYTHONUNBUFFERED: "1"
-
     volumes:
-      # 源代码挂载（支持热重加载）
-      - ./src:/app/src
-      - ./alembic:/app/alembic
-      - uploads_data:/app/uploads
-    depends_on:
-      mysql:
-        condition: service_healthy
-      api:
-        condition: service_healthy
-    command: uv run prd-agent worker
-    networks:
-      - prd-network
+      - prd_data:/app/data
+      - prd_uploads:/app/uploads
+    stop_grace_period: 30s
 
-  # ============================================
-  # Vue 前端开发服务器
-  # ============================================
-  frontend:
-    image: node:22.12-alpine
-    container_name: prd-agent-frontend
-    working_dir: /app/web
-    environment:
-      VITE_API_URL: http://localhost:8000
-    ports:
-      - "5173:5173"
-    volumes:
-      # 挂载源代码（支持热模块重加载）
-      - ./web:/app/web
-      - /app/web/node_modules  # 避免覆盖 node_modules
-    command: >
-      sh -c "npm install -g pnpm &&
-             pnpm install &&
-             pnpm dev"
-    networks:
-      - prd-network
-
-  # ============================================
-  # Adminer (MySQL 可视化工具，可选)
-  # ============================================
-  adminer:
-    image: adminer
-    container_name: prd-agent-adminer
-    ports:
-      - "8080:8080"
-    environment:
-      ADMINER_DEFAULT_SERVER: mysql
-    depends_on:
-      - mysql
-    networks:
-      - prd-network
-
-# =====================================================
-# 命名卷
-# =====================================================
 volumes:
-  mysql_data:
-    driver: local
-  uploads_data:
-    driver: local
-
-# =====================================================
-# 网络
-# =====================================================
-networks:
-  prd-network:
-    driver: bridge
+  prd_data:
+  prd_uploads:

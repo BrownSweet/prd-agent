@@ -727,7 +727,7 @@ class WorkflowEngine:
 
 
 class ProductDeliveryFlow(Flow[ProjectState]):
-    """Thin CrewAI Flow wrapper; MySQL remains the source of truth."""
+    """Thin CrewAI Flow wrapper; the configured database is the source of truth."""
 
     _skip_auto_memory = True
     _engine: WorkflowEngine = PrivateAttr()

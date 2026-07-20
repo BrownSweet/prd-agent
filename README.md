@@ -1,11 +1,11 @@
 # PRD Agent
 
-基于 CrewAI Flow 的需求工作台，将模糊需求依次推进为结构化需求、逻辑校验、PRD、独立终审和 SDD。提供 Vue Web 管理台与原有 CLI；业务状态由 MySQL 8.0+ 和 Python 门禁控制，LLM 输出不能直接改变阶段。
+基于 CrewAI Flow 的需求工作台，将模糊需求依次推进为结构化需求、逻辑校验、PRD、独立终审和 SDD。提供 Vue Web 管理台与原有 CLI；业务状态由 SQLite/MySQL 和 Python 门禁控制，LLM 输出不能直接改变阶段。
 
 **核心特性：**
 - 🤖 CrewAI Flow 编排的多智能体工作流
 - 🔐 人工门禁控制确保质量
-- 💾 MySQL 驱动的持久化任务队列
+- 💾 SQLite/MySQL 双数据库持久化任务队列，按连接 URL 自动选择
 - 🌐 Vue 3 Web 管理台 + 命令行界面
 - 🔌 支持多种 LLM（OpenAI、DeepSeek、Ollama、自定义）
 - 📄 自动生成结构化 PRD 和 SDD
@@ -74,7 +74,7 @@
         ┌──────────┴──────────┐
         │                     │
 ┌───────▼──────────┐  ┌──────▼──────────┐
-│ MySQL 8.0+       │  │ Async Worker    │
+│ SQLite / MySQL   │  │ Async Worker    │
 │ ├─ 项目状态      │  │ ├─ CrewAI Flow  │
 │ ├─ 任务队列      │  │ ├─ 智能体调度   │
 │ ├─ 审查意见      │  │ └─ 结果持久化   │
@@ -112,8 +112,8 @@
 | | FastAPI | 0.115+ |
 | | CrewAI | 1.14.6 |
 | | SQLAlchemy | 2.0+ |
-| **数据库** | MySQL | 8.0+ |
-| | PyMySQL | 1.1+ |
+| **数据库** | SQLite | Python 内置 pysqlite |
+| | MySQL / PyMySQL | 8.0+ / 1.1+ |
 | | Alembic | 1.14+ |
 | **前端** | Vue | 3.5+ |
 | | TypeScript | 5.9+ |
@@ -130,7 +130,7 @@
 
 - Python 3.12+
 - Node.js 22.12+（仅前端开发需要）
-- MySQL 8.0+ 数据库（2个数据库）
+- SQLite（Python 内置，无需安装）或 MySQL 8.0+（生产库、测试库各一个）
 - LLM API Key（OpenAI、DeepSeek 等）
 
 ### 5分钟快速启动
@@ -140,16 +140,6 @@
 ```bash
 git clone <repo-url> prd-agent
 cd prd-agent
-
-# 创建两个 MySQL 数据库
-mysql -u root -p <<EOF
-CREATE DATABASE prd_agent
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_0900_ai_ci;
-CREATE DATABASE prd_agent_test
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_0900_ai_ci;
-EOF
 
 # 复制配置文件
 cp .env.example .env
@@ -161,9 +151,18 @@ cp .env.example .env
 # .env
 LLM_MODEL=deepseek/deepseek-chat
 LLM_API_KEY=sk-xxxxx
+DATABASE_URL=sqlite+pysqlite:///./data/prd_agent.db
+TEST_DATABASE_URL=sqlite+pysqlite:///./data/prd_agent_test.db
+```
+
+如需 MySQL，把两项 URL 替换为：
+
+```dotenv
 DATABASE_URL=mysql+pymysql://user:password@localhost:3306/prd_agent?charset=utf8mb4
 TEST_DATABASE_URL=mysql+pymysql://user:password@localhost:3306/prd_agent_test?charset=utf8mb4
 ```
+
+系统根据 URL 前缀自动选择数据库；切换连接不会自动迁移已有数据。
 
 3. **安装依赖并初始化数据库**
 
@@ -291,10 +290,12 @@ LLM_TIMEOUT_SECONDS=120          # API 超时时间
 LLM_BASE_URL=                    # 自定义端点（可选）
 LLM_PROVIDER=deepseek            # 显式指定 provider（可选）
 
-# === 数据库配置 ===
-# 格式: mysql+pymysql://user:password@host:port/database?charset=utf8mb4
-DATABASE_URL=mysql+pymysql://prd_user:password@localhost:3306/prd_agent?charset=utf8mb4
-TEST_DATABASE_URL=mysql+pymysql://prd_user:password@localhost:3306/prd_agent_test?charset=utf8mb4
+# === 数据库配置（根据 URL 自动选择 SQLite/MySQL） ===
+DATABASE_URL=sqlite+pysqlite:///./data/prd_agent.db
+TEST_DATABASE_URL=sqlite+pysqlite:///./data/prd_agent_test.db
+# MySQL 8.0+：
+# DATABASE_URL=mysql+pymysql://prd_user:password@localhost:3306/prd_agent?charset=utf8mb4
+# TEST_DATABASE_URL=mysql+pymysql://prd_user:password@localhost:3306/prd_agent_test?charset=utf8mb4
 
 DATABASE_CONNECT_TIMEOUT_SECONDS=5
 DATABASE_READ_TIMEOUT_SECONDS=30
@@ -392,7 +393,7 @@ uv run prd-agent reset-admin-password
 如果使用 Docker Compose，请执行：
 
 ```bash
-docker compose exec api uv run prd-agent reset-admin-password
+docker compose exec app prd-agent reset-admin-password
 ```
 
 该命令要求数据库连接可用且已经创建管理员。如果系统尚未创建管理员，请直接打开登录页完成首次管理员创建，无需执行重置。
@@ -1024,22 +1025,13 @@ prd-agent db-upgrade
 
 # 交互式重置管理员密码，并注销所有现有会话
 prd-agent reset-admin-password
-
-# 查看迁移状态
-prd-agent db-status
 ```
 
 ### API 服务器
 
 ```bash
-# 启动 FastAPI（默认 localhost:8000）
+# 启动 FastAPI（监听地址和端口由 API_HOST/API_PORT 配置）
 prd-agent api
-
-# 指定主机和端口
-prd-agent api --host 0.0.0.0 --port 8080
-
-# 启用自动重加载（开发用）
-prd-agent api --reload
 ```
 
 ### 异步任务工作线程
@@ -1048,8 +1040,8 @@ prd-agent api --reload
 # 启动工作线程（轮询任务队列）
 prd-agent worker
 
-# 指定轮询间隔（秒）
-prd-agent worker --poll-seconds 2
+# 最多处理一个任务后退出
+prd-agent worker --once
 ```
 
 ---
@@ -1353,12 +1345,9 @@ class WorkflowEngine:
 
 ### 本地开发技巧
 
-#### 启用自动重加载
+#### 前端自动重加载
 
 ```bash
-# 后端：使用 --reload
-uv run prd-agent api --reload
-
 # 前端：pnpm dev 自动启用 HMR
 cd web && pnpm dev
 ```
@@ -1541,25 +1530,79 @@ def test_full_workflow(workflow):
 
 ## 部署到生产
 
+### Docker 单容器部署（推荐）
+
+部署镜像已经集成以下进程：
+
+- Nginx：监听容器 `8080`，托管 Vue 静态文件并代理 `/api`。
+- FastAPI：仅监听容器内部 `127.0.0.1:8000`。
+- Worker：处理持久化任务队列。
+- Alembic：每次容器启动前自动执行 `upgrade head`。
+
+默认使用 SQLite，数据库和上传文件分别保存在 Docker named volume 中，不需要启动 MySQL：
+
+```bash
+bash docker/startup.sh start
+```
+
+启动完成后访问：<http://localhost:8080>。
+
+常用命令：
+
+```bash
+bash docker/startup.sh status
+bash docker/startup.sh logs
+bash docker/startup.sh restart
+bash docker/startup.sh stop
+```
+
+也可以直接使用 Compose：
+
+```bash
+docker compose up -d --build --wait
+docker compose ps
+docker compose logs -f app
+```
+
+生产 Compose 默认发布到 `80` 端口：
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build --wait
+```
+
+如需修改对外端口，在 `.env` 中设置：
+
+```dotenv
+APP_PORT=8088
+```
+
+如需连接外部 MySQL，生产库与测试库必须同时配置且使用相同数据库类型：
+
+```dotenv
+DOCKER_DATABASE_URL=mysql+pymysql://USER:PASSWORD@HOST:3306/prd_agent?charset=utf8mb4
+DOCKER_TEST_DATABASE_URL=mysql+pymysql://USER:PASSWORD@HOST:3306/prd_agent_test?charset=utf8mb4
+```
+
+切换数据库 URL 不会自动搬迁 SQLite/MySQL 中已有的数据。
+
+### 手动部署参考
+
 ### 1. 前置检查
 
 ```bash
 # 检查依赖
-uv sync
+uv sync --extra dev
 
 # 运行测试
-uv run pytest
+.venv/bin/python -m pytest
 cd web && pnpm test && pnpm build
-
-# 检查代码质量
-uv run ruff check src/
 ```
 
 ### 2. 构建前端
 
 ```bash
 cd web
-pnpm install --prod  # 生产模式
+pnpm install --frozen-lockfile
 pnpm build           # 输出到 dist/
 
 # 验证构建
@@ -1572,20 +1615,17 @@ ls -la dist/
 # 在生产环境运行迁移
 uv run prd-agent db-upgrade
 
-# 验证
-uv run prd-agent db-status
+# 验证当前迁移版本
+uv run alembic current
 ```
 
 ### 4. 启动服务
 
-**选项 A：分离的进程（推荐）**
+**选项 A：分离的进程**
 
 ```bash
 # 终端 1：API
-nohup uv run prd-agent api \
-  --host 0.0.0.0 \
-  --port 8000 \
-  > api.log 2>&1 &
+nohup uv run prd-agent api > api.log 2>&1 &
 
 # 终端 2：Worker
 nohup uv run prd-agent worker \
@@ -1599,13 +1639,15 @@ nohup uv run prd-agent worker \
 ```ini
 [Unit]
 Description=PRD Agent API
-After=network.target mysql.service
+After=network.target
 
 [Service]
 Type=simple
 User=prd
 WorkingDirectory=/opt/prd-agent
-ExecStart=/opt/prd-agent/.venv/bin/uv run prd-agent api --host 0.0.0.0
+Environment=API_HOST=127.0.0.1
+Environment=API_PORT=8000
+ExecStart=/opt/prd-agent/.venv/bin/prd-agent api
 Restart=on-failure
 RestartSec=10
 
@@ -1719,10 +1761,10 @@ input {
 
 ```bash
 # 检查 API 是否在线
-curl -f http://localhost:8000/health || exit 1
+curl -f http://localhost:8000/api/v1/health || exit 1
 
 # 检查数据库连接
-curl -f http://localhost:8000/setup/database || exit 1
+uv run alembic current
 ```
 
 ---

@@ -36,7 +36,7 @@ console = Console()
 def _repository(settings: Settings) -> SQLAlchemyRepository:
     if not settings.database_url:
         raise ValueError(
-            "缺少 DATABASE_URL。请先通过 Web 安装向导或 .env 配置 MySQL。"
+            "缺少 DATABASE_URL。请先通过 Web 安装向导或 .env 配置数据库。"
         )
     return SQLAlchemyRepository.from_url(
         settings.database_url,
@@ -210,7 +210,7 @@ def worker(
         typer.Option("--once", help="最多处理一个任务后退出"),
     ] = False,
 ) -> None:
-    """启动MySQL后台任务Worker。"""
+    """启动数据库后台任务Worker。"""
 
     run_worker(get_settings(), once=once)
 
