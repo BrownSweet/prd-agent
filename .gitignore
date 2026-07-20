@@ -14,5 +14,4 @@ output/
 uploads/
 web/vite.config.js
 web/vite.config.d.ts
-uv.lock
 .idea
